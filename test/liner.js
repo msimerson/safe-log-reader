@@ -10,4 +10,9 @@ describe('liner', function () {
         assert.ok(liner instanceof stream.Transform);
         done();
     });
+
+    it('sets a streams encoding', function (done) {
+        // TODO
+        done();
+    });
 });

@@ -3,12 +3,18 @@
   "description": "Safe Log Reader",
   "version": "0.0.1",
   "private": false,
-  "dependencies": {
+  "homepage": "https://github.com/DoubleCheck/safe-log-reader",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/DoubleCheck/safe-log-reader.git"
   },
+  "dependencies": {},
   "devDependencies": {
     "mocha": "^2.2.5"
   },
   "scripts": {
     "test": "mocha"
+  },
+  "optionalDependencies": {
   }
 }
