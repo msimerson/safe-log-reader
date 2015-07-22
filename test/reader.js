@@ -17,12 +17,23 @@ describe('reader', function() {
         .on('readable', function () { this.read(); });
     });
 
-    it('reads a text file', function (done) {
+    it('reads another text file concurrently', function (done) {
         var linesSeen = 0;
         reader.createReader(path.join(dataDir, 'test.log.1'))
         .on('read', function (data, lines, bytes) {
-            assert.equal(data, logLine);
             linesSeen++;
+            assert.equal(data, logLine);
+            if (linesSeen === 3) done();
+        })
+        .on('readable', function () { this.read(); });
+    });
+
+    it('maintains an accurate line counter', function (done) {
+        var linesSeen = 0;
+        reader.createReader(path.join(dataDir, 'test.log.1'))
+        .on('read', function (data, lines, bytes) {
+            linesSeen++;
+            assert.equal(lines, linesSeen);
             if (linesSeen === 3) done();
         })
         .on('readable', function () { this.read(); });

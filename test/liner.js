@@ -10,6 +10,4 @@ describe('liner', function () {
         assert.ok(liner instanceof stream.Transform);
         done();
     });
-
-
 });
