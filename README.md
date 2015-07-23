@@ -1,3 +1,6 @@
+[![Build Status][ci-img]][ci-url]
+[![Coverage Status][cov-img]][cov-url]
+
 # safe-log-reader
 
 Safe Log Reader
@@ -17,3 +20,10 @@ Safe Log Reader
 - [ ] reads rotated log files properly
     - [ ] continues reading old log file until quiet
     - [x] reads the new file when it appears
+
+
+
+[ci-img]: https://travis-ci.org/DoubleCheck/safe-log-reader.svg
+[ci-url]: https://travis-ci.org/DoubleCheck/safe-log-reader
+[cov-img]: https://coveralls.io/repos/DoubleCheck/safe-log-reader/badge.svg
+[cov-url]: https://coveralls.io/github/DoubleCheck/safe-log-reader
