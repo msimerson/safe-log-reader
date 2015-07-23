@@ -20,7 +20,10 @@ Safe Log Reader
 - [ ] reads rotated log files properly
     - [ ] continues reading old log file until quiet
     - [x] reads the new file when it appears
-
+    - [x] tested on platforms
+        - [x] Mac OS X
+        - [x] Linux
+        - [ ] FreeBSD
 
 
 [ci-img]: https://travis-ci.org/DoubleCheck/safe-log-reader.svg

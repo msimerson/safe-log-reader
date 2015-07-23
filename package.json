@@ -20,7 +20,7 @@
   },
   "config": {
     "blanket": {
-      "pattern": "lib/server.js"
+      "pattern": "lib"
     }
   },
   "scripts": {
