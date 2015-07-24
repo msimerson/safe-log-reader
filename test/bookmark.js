@@ -8,7 +8,7 @@ var book    = require('../lib/bookmark')(bookDir);
 
 describe('bookmark', function () {
 
-	var inode = '34454366';
+	var inode = 34454366;
 	var bm = {
 		'file':'/Users/matt/Documents/git/efolder/safe-log-reader/mail.log',
 		'bytes':8193,
@@ -21,7 +21,7 @@ describe('bookmark', function () {
             done();
         });
     });
-
+/*
     after('cleans bookmark dir', function (done) {
         fs.readdir(bookDir, function (err, files) {
             if (err) return console.error(err);
@@ -31,7 +31,7 @@ describe('bookmark', function () {
             done();
         });
     });
-
+*/
 	it('saves a bookmark', function (done) {
 		book.save(inode, bm, function (err) {
 			assert.ifError(err);

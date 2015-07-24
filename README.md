@@ -10,7 +10,7 @@ Safe Log Reader
 - [x] Read plain text files
 - [ ] Handles common log file events
     - [x] reads growing files (aka: tail -F)
-    - [ ] reads rotated log files properly
+    - [ ] reads rotated logs
         - [ ] continues reading old log file until quiet
         - [x] reads the new file when it appears
             - [x] fs.watch tested on:
@@ -19,19 +19,20 @@ Safe Log Reader
                 - [ ] FreeBSD
     - [ ] file truncation (echo '' > foo.log)
     - [x] watches for non-existent log to appear
-- [ ] Read compressed log files
+- [x] Read compressed log files
     - [x] gzip (zlib)
     - [ ] bzip2
 - [x] Emits data as lines, upon request (paused mode streaming)
 - [x] handles utf-8 multibyte characters properly
 - [x] streams multiple files simultaneously
     - [ ] one superviser + one child process per log file
-- [ ] Remembers previously read files
-    - [ ] Perists across program restarts (bookmarks)
+- [x] Remembers previously read files
+    - [x] Perists across program restarts (bookmarks)
         - [x] identifies files by inode
         - [x] saves file data: name, size, byte position, line count
-- [ ] cronolog style syntax (/var/log/http/201?/??/??/access.log)
+- [ ] cronolog naming syntax (/var/log/http/YYYY/MM/DD/access.log)
     - [ ] watches existing directory ancestor
+- [ ] winston naming syntax (app.log1, app.log2, etc.)
 - [ ] feeds logs to a shipper
     - [ ] log-ship-elastic-postfix
         - receives batches of log entries
