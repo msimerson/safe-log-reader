@@ -28,8 +28,8 @@ Safe Log Reader
     - [ ] one superviser + one child process per log file
 - [ ] Remembers previously read files
     - [ ] Perists across program restarts (bookmarks)
-        - [ ] identifies files by inode
-        - [ ] saves file data: name, size, byte position, line count
+        - [x] identifies files by inode
+        - [x] saves file data: name, size, byte position, line count
 - [ ] cronolog style syntax (/var/log/http/201?/??/??/access.log)
     - [ ] watches existing directory ancestor
 - [ ] feeds logs to a shipper
@@ -45,7 +45,7 @@ Safe Log Reader
 - [ ] process line status, examples:
     - reader:/var/log/mail.log bytes:5689423 lines:43023 reading
     - reader:/var/log/mail.log.1 bytes:2340953 lines:98302 waiting for data
-
+- [x] config file is human friendly ini
 
 [ci-img]: https://travis-ci.org/DoubleCheck/safe-log-reader.svg
 [ci-url]: https://travis-ci.org/DoubleCheck/safe-log-reader

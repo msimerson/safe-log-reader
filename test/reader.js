@@ -4,6 +4,9 @@ var child    = require('child_process');
 var fs      = require('fs');
 var path    = require('path');
 
+var readerOpts = { bookmark: {
+    dir: path.resolve('test', '.bookmarks')
+}};
 var reader  = require('../lib/reader');
 
 var dataDir = path.join('test', 'data');
@@ -11,7 +14,7 @@ var logLine = 'The rain in spain falls mainly on the plain.';
 
 describe('reader', function () {
     it('reads a text file', function (done) {
-        reader.createReader(path.join(dataDir, 'test.log'))
+        reader.createReader(path.join(dataDir, 'test.log'), readerOpts)
         .on('read', function (data) {
             assert.equal(data, logLine);
             done();
@@ -21,7 +24,7 @@ describe('reader', function () {
 
     it('reads another text file concurrently', function (done) {
         var linesSeen = 0;
-        reader.createReader(path.join(dataDir, 'test.log.1'))
+        reader.createReader(path.join(dataDir, 'test.log.1'), readerOpts)
         .on('read', function (data, lines, bytes) {
             linesSeen++;
             assert.equal(data, logLine);
@@ -32,7 +35,7 @@ describe('reader', function () {
 
     it('maintains an accurate line counter', function (done) {
         var linesSeen = 0;
-        reader.createReader(path.join(dataDir, 'test.log.1'))
+        reader.createReader(path.join(dataDir, 'test.log.1'), readerOpts)
         .on('read', function (data, lines, bytes) {
             linesSeen++;
             assert.equal(lines, linesSeen);
@@ -42,7 +45,7 @@ describe('reader', function () {
     });
 
     it('reads a gzipped file', function (done) {
-        reader.createReader(path.join(dataDir, 'test.log.1.gz'))
+        reader.createReader(path.join(dataDir, 'test.log.1.gz'), readerOpts)
         .on('read', function (data) {
             // console.log(data);
             assert.equal(data, logLine);
@@ -52,7 +55,7 @@ describe('reader', function () {
     });
 
     it.skip('reads a bzip2 compressed file', function (done) {
-        reader.createReader(path.join(dataDir, 'test.log.1.bz2'))
+        reader.createReader(path.join(dataDir, 'test.log.1.bz2'), readerOpts)
         .on('read', function (data) {
             // console.log(data);
             assert.equal(data, logLine);
@@ -78,7 +81,7 @@ describe('reader', function () {
             var linesRead = 0;
             var appended = false;
 
-            reader.createReader(appendFile)
+            reader.createReader(appendFile, readerOpts)
             .on('read', function (data) {
                 linesRead++;
                 // console.log('line: ' + linesRead + ', ' + data);
@@ -109,7 +112,7 @@ describe('reader', function () {
     
             fs.writeFile(rotateLog, logLine + '\n', function () {
 
-                reader.createReader(rotateLog)
+                reader.createReader(rotateLog, readerOpts)
                 .on('readable', function () { this.read(); })
                 .on('read', function (data) {
                     lineCount++;
@@ -157,7 +160,7 @@ describe('reader', function () {
 
             fs.writeFile(rotateLog, logLine + '\n', function () {
 
-                reader.createReader(rotateLog)
+                reader.createReader(rotateLog, readerOpts)
                 .on('readable', function () { this.read(); })
                 .on('read', function (data) {
                     lineCount++;
@@ -215,7 +218,7 @@ describe('reader', function () {
 
         it('discovers and reads', function (done) {
 
-            reader.createReader(missingFile)
+            reader.createReader(missingFile, readerOpts)
             .on('readable', function () { this.read(); })
             .on('read', function (data) {
                 assert.equal(data, logLine);

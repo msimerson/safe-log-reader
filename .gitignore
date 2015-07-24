@@ -3,3 +3,5 @@ node_modules
 test/data/append.log*
 test/data/rotate*
 .safe-log-reader.json
+test/.bookmarks
+*.log
