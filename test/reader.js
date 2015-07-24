@@ -197,4 +197,41 @@ describe('reader', function () {
             });
         });
     });
+
+    context('on non-existent file', function () {
+
+        var missingFile = path.join(dataDir, 'missing.log');
+        var childOpts  = { env: {
+            FILE_PATH: missingFile,
+            LOG_LINE: (logLine + '\n'),
+        } };
+
+        before(function (done) {
+            fs.unlink(missingFile, function (err) {
+                // might not exist, ignore err
+                done();
+            });
+        });
+
+        it('discovers and reads', function (done) {
+
+            reader.createReader(missingFile)
+            .on('readable', function () { this.read(); })
+            .on('read', function (data) {
+                assert.equal(data, logLine);
+                done();
+            });
+
+            process.nextTick(function () {
+                child.fork(
+                    path.join('test','helpers','fileAppend.js'),
+                    childOpts
+                )
+                .on('message', function (msg) {
+                    // console.log(msg);
+                });
+            });
+        });
+
+    });
 });
