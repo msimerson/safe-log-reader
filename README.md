@@ -41,11 +41,11 @@ Read plain or compressed log files from disk. Deliver batches of log lines to a 
 - [ ] process line status, `ps` output examples:
     - reader:/var/log/mail.log bytes:5689423 lines:43023 reading
     - reader:/var/log/mail.log.1 bytes:2340953 lines:98302 waiting for data
-- [x] config file is human friendly ini
+- [x] zero dependencies
 
 # Shippers
 
-- [ ] log-ship-elastic-postfix
+- [ ] [log-ship-elastic-postfix](https://github.com/DoubleCheck/log-ship-elasticsearch-postfix)
     - receives batches of log entries
     - parses using [postfix-parser](https://github.com/DoubleCheck/postfix-parser)
     - fetches matching docs from ES
