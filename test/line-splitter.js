@@ -2,11 +2,11 @@
 var assert = require('assert');
 var stream = require('stream');
 
-var Liner  = require('../lib/liner');
+var LineSplitter = require('../lib/line-splitter');
 
-describe('liner', function () {
+describe('line-splitter', function () {
     it('creates an stream.Transform instance', function (done) {
-        var liner = new Liner();
+        var liner = new LineSplitter();
         assert.ok(liner instanceof stream.Transform);
         done();
     });

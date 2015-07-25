@@ -1,17 +1,21 @@
 [![Build Status][ci-img]][ci-url]
 [![Coverage Status][cov-img]][cov-url]
 
-# safe-log-reader
+# Safe Log Reader
 
-Safe Log Reader
+Read plain or compressed log files from disk. Deliver batches of log lines to a shipper and wait for the shipper to verify delivery. Repeat ad infinitum.
+
+## Install
+
+    npm i safe-log-reader
 
 ## Features
 
 - [x] Read plain text files
-- [ ] Handles common log file events
+- [x] Handles common log file events
     - [x] reads growing files (aka: tail -F)
-    - [ ] reads rotated logs
-        - [ ] continues reading old log file until quiet
+    - [x] reads rotated logs
+        - [ ] continues reading old log file until quiet (necessary?)
         - [x] reads the new file when it appears
             - [x] fs.watch tested on:
                 - [x] Mac OS X
@@ -34,19 +38,26 @@ Safe Log Reader
     - [ ] watches existing directory ancestor
 - [ ] winston naming syntax (app.log1, app.log2, etc.)
 - [ ] feeds logs to a shipper
-    - [ ] log-ship-elastic-postfix
-        - receives batches of log entries
-        - parses using postfix-parser
-        - fetches matching docs from ES
-        - updates/creates normalized documents
-        - saves docs to elasticsearch
-    - [ ] log-ship-elastic-qpsmtpd
-        - receives JSON parsed log lines
-        - saves to elasticsearch
-- [ ] process line status, examples:
+- [ ] process line status, `ps` output examples:
     - reader:/var/log/mail.log bytes:5689423 lines:43023 reading
     - reader:/var/log/mail.log.1 bytes:2340953 lines:98302 waiting for data
 - [x] config file is human friendly ini
+
+# Shippers
+
+- [ ] log-ship-elastic-postfix
+    - receives batches of log entries
+    - parses using [postfix-parser](https://github.com/DoubleCheck/postfix-parser)
+    - fetches matching docs from ES
+    - updates/creates normalized documents
+    - saves docs to elasticsearch
+- [ ] log-ship-elastic-qpsmtpd
+    - receives JSON parsed log lines
+    - saves to elasticsearch
+- [ ] log-ship-elastic-lighttpd
+    - receives JSON parsed log lines
+    - saves to elasticsearch
+
 
 [ci-img]: https://travis-ci.org/DoubleCheck/safe-log-reader.svg
 [ci-url]: https://travis-ci.org/DoubleCheck/safe-log-reader
