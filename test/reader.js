@@ -10,7 +10,7 @@ var readerOpts = { bookmark: {
 var noBmReadOpts = JSON.parse(JSON.stringify(readerOpts));
     noBmReadOpts.noBookmark = true;
 
-var reader  = require('../lib/reader');
+var reader  = require('../index');
 
 var dataDir = path.join('test', 'data');
 var logLine = 'The rain in spain falls mainly on the plain.';
@@ -19,7 +19,7 @@ var newFile = function (filePath, data, done) {
     // unlink first, b/c fs.writeFile overwrite doesn't replace the inode
     fs.unlink(filePath, function (err) {
         fs.writeFile(filePath, data, done);
-    })
+    });
 };
 
 describe('reader', function () {

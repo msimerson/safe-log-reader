@@ -7,8 +7,8 @@ var path      = require('path');
 var util      = require('util');
 var zlib      = require('zlib');
 
-var Bookmark  = require('./bookmark');
-var Splitter  = require('./line-splitter');
+var Bookmark  = require('./lib/bookmark');
+var Splitter  = require('./lib/line-splitter');
 
 function Reader (fileOrPath, options) {
     events.EventEmitter.call(this);
