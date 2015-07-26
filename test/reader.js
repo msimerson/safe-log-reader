@@ -33,7 +33,7 @@ describe('reader', function () {
         .on('read', function (data) {
             assert.equal(data, logLine);
             done();
-        });        
+        });
     });
 
     it('reads another text file concurrently', function (done) {
@@ -54,32 +54,32 @@ describe('reader', function () {
         var filePath = path.join(dataDir, 'test.log.1');
 
         reader.createReader(filePath, noBmReadOpts)
+        .on('readable', function () { this.read(); })
         .on('read', function (data, lines, bytes) {
             linesSeen++;
             assert.equal(lines, linesSeen);
             if (linesSeen === 3) done();
-        })
-        .on('readable', function () { this.read(); });
+        });
     });
 
     it('reads a gzipped file', function (done) {
         reader.createReader(path.join(dataDir, 'test.log.1.gz'), readerOpts)
+        .on('readable', function () { this.read(); })
         .on('read', function (data) {
             // console.log(data);
             assert.equal(data, logLine);
             done();
-        })
-        .on('readable', function () { this.read(); });
+        });
     });
 
     it.skip('reads a bzip2 compressed file', function (done) {
         reader.createReader(path.join(dataDir, 'test.log.1.bz2'), readerOpts)
+        .on('readable', function () { this.read(); })
         .on('read', function (data) {
             // console.log(data);
             assert.equal(data, logLine);
             done();
-        })
-        .on('readable', function () { this.read(); });
+        });
     });
 
     context('growing file', function () {
