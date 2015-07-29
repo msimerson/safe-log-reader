@@ -248,7 +248,11 @@ Reader.prototype.renameMacOS = function (filename) {
 
 Reader.prototype.end = function () {
     // console.log('end of ' + this.filePath);
-    if (this.isArchive) return; // archives don't get appended
+    if (this.isArchive) {
+        this.emit('end');
+        return; // archives don't get appended, don't watch
+    }
+
     if (this.watcher) {
         console.log(this.filePath + ' already being watched');
         return;

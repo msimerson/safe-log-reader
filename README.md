@@ -27,27 +27,22 @@ Read plain or compressed log files from disk. Deliver batches of log lines to a 
     - [x] gzip (zlib)
     - [ ] bzip2
 - [x] Emits data as lines, upon request (paused mode streaming)
+    - [ ] waits for confirmation, then advances bookmarks
 - [x] handles utf-8 multibyte characters properly
-- [x] streams multiple files simultaneously
-    - [ ] one superviser + one child process per log file
-- [x] Remembers previously read files
-    - [x] Perists across program restarts (bookmarks)
+- [x] Remembers previously read files (bookmarks)
+    - [x] Perists across program restarts
         - [x] identifies files by inode
         - [x] saves file data: name, size, byte position, line count
 - [ ] cronolog naming syntax (/var/log/http/YYYY/MM/DD/access.log)
     - [ ] watches existing directory ancestor
 - [ ] winston naming syntax (app.log1, app.log2, etc.)
-- [ ] feeds logs to a shipper
-- [ ] process line status, `ps` output examples:
-    - reader:/var/log/mail.log bytes:5689423 lines:43023 reading
-    - reader:/var/log/mail.log.1 bytes:2340953 lines:98302 waiting for data
 - [x] zero dependencies
 
 # Shippers
 
-- [ ] [log-ship-elastic-postfix](https://github.com/DoubleCheck/log-ship-elasticsearch-postfix)
-    - receives batches of log entries
-    - parses using [postfix-parser](https://github.com/DoubleCheck/postfix-parser)
+- [x] [log-ship-elastic-postfix](https://github.com/DoubleCheck/log-ship-elasticsearch-postfix)
+    - reads batches of log entries
+    - parses with [postfix-parser](https://github.com/DoubleCheck/postfix-parser)
     - fetches matching docs from ES
     - updates/creates normalized documents
     - saves docs to elasticsearch
