@@ -20,6 +20,11 @@ function Reader (fileOrPath, options) {
     this.bookmark    = new Bookmark(options.bookmark.dir ||
                         path.resolve('./', '.bookmark'));
 
+    if (options.batchLimit) {
+        this.batchCount = 0;
+        this.batchLimit = options.batchLimit;
+    }
+
     this.isArchive   = false;
     this.filePath    = path.resolve(fileOrPath);
     this.bytes       = 0;
@@ -69,14 +74,31 @@ Reader.prototype.lineSplitter = function () {
 };
 
 Reader.prototype.read = function () {
+
+    if (this.batchLimit && this.batchCount >= this.batchLimit) {
+        console.log('batchCount: ' + this.batchCount);
+        var slr = this;
+        this.emit('end', function () {
+            console.log('\tbatch limit end returned');
+            slr.saveBookmark(function (err) {
+                if (err) console.error(err);
+                slr.batchCount = 0;
+                slr.read();
+            });
+        });
+        return;
+    }
+
     var line = this.liner.read();
     this.bytes = this.liner.bytes;
-    // console.log('\tbytes: ' + this.bytes);
     if (line === null) {  // EOF
         return;
     }
+
+    this.batchCount++;
     this.lines++;
     this.emit('read', line, this.lines);
+    if (this.liner.readable) this.read();
 };
 
 Reader.prototype.createStream = function () {
@@ -227,7 +249,10 @@ Reader.prototype.renameMacOS = function (filename) {
 Reader.prototype.end = function () {
     // console.log('end of ' + this.filePath);
     if (this.isArchive) return; // archives don't get appended
-    if (this.watcher) return;
+    if (this.watcher) {
+        console.log(this.filePath + ' already being watched');
+        return;
+    }
 
     var watchAndEmit = function () {
         this.watch(this.filePath);
@@ -236,7 +261,17 @@ Reader.prototype.end = function () {
 
     if (this.noBookmark) return watchAndEmit();
 
+    this.saveBookmark(function (err) {
+        if (err) console.error(err);
+        watchAndEmit();
+    });
+};
+
+Reader.prototype.saveBookmark = function (done) {
     fs.stat(this.filePath, function (err, stat) {
+        if (err) {
+            console.error(err);
+        }
 
         var mark = {
             file: this.filePath,
@@ -244,9 +279,10 @@ Reader.prototype.end = function () {
             size: stat.size,
             lines: this.lines,
         };
+
         this.bookmark.save(stat.ino, mark, function (err) {
             if (err) console.error(err);
-            watchAndEmit();
+            done(err, true);
         }.bind(this));
     }.bind(this));
 };
