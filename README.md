@@ -1,5 +1,6 @@
 [![Build Status][ci-img]][ci-url]
 [![Coverage Status][cov-img]][cov-url]
+[![Code Climate][clim-img]][clim-url]
 
 # Safe Log Reader
 
@@ -58,3 +59,5 @@ Read plain or compressed log files from disk. Deliver batches of log lines to a 
 [ci-url]: https://travis-ci.org/DoubleCheck/safe-log-reader
 [cov-img]: https://coveralls.io/repos/DoubleCheck/safe-log-reader/badge.svg
 [cov-url]: https://coveralls.io/github/DoubleCheck/safe-log-reader
+[clim-img]: https://codeclimate.com/github/DoubleCheck/safe-log-reader/badges/gpa.svg
+[clim-url]: https://codeclimate.com/github/DoubleCheck/safe-log-reader

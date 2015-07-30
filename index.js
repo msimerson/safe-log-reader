@@ -29,6 +29,7 @@ function Reader (fileOrPath, options) {
     this.filePath    = path.resolve(fileOrPath);
     this.bytes       = 0;
     this.lines       = 0;
+    this.startLine   = 0;
 
     if (options.bytes !== undefined) this.bytes = options.bytes;
 
@@ -45,14 +46,19 @@ function Reader (fileOrPath, options) {
             return this.createStream();
         }
         // console.log(stat);
-        // load up the bookmark for for it
+        // load up the bookmark for it
         this.bookmark.read(stat.ino, function (err, mark) {
             if (err && err.code !== 'ENOENT') {
                 console.error(err.message);
             }
+            /*
             if (!this.bytes && mark && mark.bytes) {
                 this.bytes = mark.bytes;
                 // console.log('Bookmark bytes: ' + this.bytes);
+            }
+            */
+            if (!this.startLine && mark && mark.lines) {
+                this.startLine = mark.lines;
             }
             this.createStream();
         }.bind(this));
@@ -64,7 +70,7 @@ util.inherits(Reader, events.EventEmitter);
 Reader.prototype.lineSplitter = function () {
 
     this.liner = new Splitter({
-        bytes:    this.bytes,
+        // bytes:    this.bytes,
         encoding: this.encoding,
     })
     .on('readable', function () {
@@ -74,6 +80,12 @@ Reader.prototype.lineSplitter = function () {
 };
 
 Reader.prototype.read = function () {
+
+    if (this.startLine && this.lines <= this.startLine) {
+        this.liner.read();
+        this.lines++;
+        return;
+    }
 
     if (this.batchLimit && this.batchCount >= this.batchLimit) {
         console.log('batchCount: ' + this.batchCount);
