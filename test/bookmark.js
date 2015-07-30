@@ -15,23 +15,6 @@ describe('bookmark', function () {
 		'lines':45
 	};
 
-    before('creates bookmark dir', function (done) {
-        fs.mkdir(bookDir, function (err) {
-            // ignore any 'already exists' error
-            done();
-        });
-    });
-/*
-    after('cleans bookmark dir', function (done) {
-        fs.readdir(bookDir, function (err, files) {
-            if (err) return console.error(err);
-            for (var i=0; i<files.length; i++) {
-                fs.unlink(path.resolve(bookDir, files[i]));
-            }
-            done();
-        });
-    });
-*/
 	it('saves a bookmark', function (done) {
 		book.save(inode, bm, function (err) {
 			assert.ifError(err);
