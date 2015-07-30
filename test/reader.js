@@ -4,9 +4,10 @@ var child   = require('child_process');
 var fs      = require('fs');
 var path    = require('path');
 
-var readerOpts = { bookmark: {
-    dir: path.resolve('test', '.bookmarks')
-}};
+var readerOpts = {
+    bookmark: { dir: path.resolve('test', '.bookmarks') },
+    batchLimit: 1024,
+};
 var noBmReadOpts = JSON.parse(JSON.stringify(readerOpts));
     noBmReadOpts.noBookmark = true;
 
