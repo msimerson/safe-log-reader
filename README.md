@@ -4,7 +4,7 @@
 
 # Safe Log Reader
 
-Read plain or compressed log files from disk. Deliver batches of log lines to a shipper and wait for the shipper to verify delivery. Repeat ad infinitum.
+Read plain or compressed log files from disk, deliver as [batches of] lines to a log consumer. Wait for the log consumer to report success. Repeat ad infinitum.
 
 ## Install
 
@@ -16,24 +16,26 @@ Read plain or compressed log files from disk. Deliver batches of log lines to a 
 - [x] Handles common log file events
     - [x] reads growing files (aka: tail -F)
     - [x] reads rotated logs
-        - [ ] continues reading old log file until quiet (necessary?)
         - [x] reads the new file when it appears
             - [x] fs.watch tested on:
                 - [x] Mac OS X
                 - [x] Linux
                 - [ ] FreeBSD
+        - [ ] continues reading old log file until quiet (necessary?)
     - [ ] file truncation (echo '' > foo.log)
     - [x] watches for non-existent log to appear
 - [x] Read compressed log files
     - [x] gzip (zlib)
     - [ ] bzip2
 - [x] Emits data as lines, upon request (paused mode streaming)
-    - [ ] waits for confirmation, then advances bookmarks
+    - [x] Uses a [Transform Stream](https://nodejs.org/api/stream.html#stream_class_stream_transform_1) to efficiently convert buffer streams to lines
+    - [x] waits for confirmation, then advances bookmarks
 - [x] handles utf-8 multibyte characters properly
 - [x] Remembers previously read files (bookmarks)
     - [x] Perists across program restarts
         - [x] identifies files by inode
-        - [x] saves file data: name, size, byte position, line count
+        - [x] saves file data: name, size, line count, inode
+    - [x] When safe, uses byte position to efficiently resume reading
 - [ ] cronolog naming syntax (/var/log/http/YYYY/MM/DD/access.log)
     - [ ] watches existing directory ancestor
 - [ ] winston naming syntax (app.log1, app.log2, etc.)
@@ -45,7 +47,7 @@ Read plain or compressed log files from disk. Deliver batches of log lines to a 
     - reads batches of log entries
     - parses with [postfix-parser](https://github.com/DoubleCheck/postfix-parser)
     - fetches matching docs from ES
-    - updates/creates normalized documents
+    - updates/creates normalized postfix docs
     - saves docs to elasticsearch
 - [ ] log-ship-elastic-qpsmtpd
     - receives JSON parsed log lines

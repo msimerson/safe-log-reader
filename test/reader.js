@@ -30,7 +30,7 @@ describe('reader', function () {
         
         // console.log(arguments);
         reader.createReader(filePath, noBmReadOpts)
-        .on('readable', function () { this.read(); })
+        .on('readable', function () { this.readStream(); })
         .on('read', function (data) {
             assert.equal(data, logLine);
             done();
@@ -42,7 +42,7 @@ describe('reader', function () {
         var filePath = path.join(dataDir, 'test.log.1');
         
         reader.createReader(filePath, noBmReadOpts)
-        .on('readable', function () { this.read(); })
+        .on('readable', function () { this.readStream(); })
         .on('read', function (data, lines, bytes) {
             linesSeen++;
             assert.equal(data, logLine);
@@ -55,7 +55,7 @@ describe('reader', function () {
         var filePath = path.join(dataDir, 'test.log.1');
 
         reader.createReader(filePath, noBmReadOpts)
-        .on('readable', function () { this.read(); })
+        .on('readable', function () { this.readStream(); })
         .on('read', function (data, lines, bytes) {
             linesSeen++;
             assert.equal(lines, linesSeen);
@@ -64,8 +64,8 @@ describe('reader', function () {
     });
 
     it('reads a gzipped file', function (done) {
-        reader.createReader(path.join(dataDir, 'test.log.1.gz'), readerOpts)
-        .on('readable', function () { this.read(); })
+        reader.createReader(path.join(dataDir, 'test.log.1.gz'), noBmReadOpts)
+        .on('readable', function () { this.readStream(); })
         .on('read', function (data) {
             // console.log(data);
             assert.equal(data, logLine);
@@ -74,8 +74,8 @@ describe('reader', function () {
     });
 
     it.skip('reads a bzip2 compressed file', function (done) {
-        reader.createReader(path.join(dataDir, 'test.log.1.bz2'), readerOpts)
-        .on('readable', function () { this.read(); })
+        reader.createReader(path.join(dataDir, 'test.log.1.bz2'), noBmReadOpts)
+        .on('readable', function () { this.readStream(); })
         .on('read', function (data) {
             // console.log(data);
             assert.equal(data, logLine);
@@ -85,32 +85,41 @@ describe('reader', function () {
 
     context('growing file', function () {
         var appendFile = path.join(dataDir, 'append.log');
-        var childOpts  = { env: {
-            FILE_PATH: appendFile,
-            LOG_LINE: (logLine + '\n'),
-        } };
 
         before(function (done) {
-            fs.appendFile(appendFile, 'I will grow\n', done);
+            fs.appendFile(appendFile, 'I will grow\n', function (err) {
+                if (err) console.error(err);
+                // console.log('\tgrowing file before append');
+                done(err);
+            });
         });
 
-        it('reads lines appended after EOF', function (done) {
-            var linesRead = 0;
+        it('reads exactly 1 line appended after EOF', function (done) {
+            var appendsRead = 0;
             var appendCalled = false;
             var appendDone = false;
             var appended = false;
+            var calledDone = false;
 
             var tryDone = function () {
-                if (appendDone) return done();
-                setTimeout(function () { tryDone(); }, 10);
+                if (!appendDone) {
+                    setTimeout(function () { tryDone(); }, 10);
+                    return;
+                }
+                if (calledDone) return;
+                calledDone = true;
+                assert.equal(appendsRead, 1);
+                done();
             };
 
-            reader.createReader(appendFile, noBmReadOpts)
-            .on('readable', function () { this.read(); })
-            .on('read', function (data) {
-                linesRead++;
+            reader.createReader(appendFile, readerOpts)
+            .on('readable', function () { this.readStream(); })
+            .on('read', function (data, linesRead) {
                 // console.log('line: ' + linesRead + ', ' + data);
-                if (appendDone) tryDone();
+                if (appendDone) {
+                    appendsRead++;
+                    tryDone();
+                } 
             })
             .on('end', function () {
 
@@ -120,7 +129,10 @@ describe('reader', function () {
                 // append in a separate process, so this one gets the event
                 child.fork(
                     path.join('test','helpers','fileAppend.js'),
-                    childOpts
+                    { env: {
+                        FILE_PATH: appendFile,
+                        LOG_LINE: (logLine + '\n'),
+                    } }
                 )
                 .on('message', function (msg) {
                     // console.log(msg);
@@ -161,9 +173,8 @@ describe('reader', function () {
             newFile(rotateLog, logLine + '\n', function () {
 
                 reader.createReader(rotateLog, readerOpts)
-                .on('readable', function () { this.read(); })
-                .on('read', function (data) {
-                    lineCount++;
+                .on('readable', function () { this.readStream(); })
+                .on('read', function (data, lineCount) {
                     // console.log(lineCount + '. ' + data);
 
                     if (appendDone) tryDone();
@@ -198,10 +209,9 @@ describe('reader', function () {
             fs.writeFile(rotateLog, logLine + '\n', function () {
 
                 reader.createReader(rotateLog, noBmReadOpts)
-                .on('readable', function () { this.read(); })
-                .on('read', function (data) {
-                    lineCount++;
-                    console.log(lineCount + '. ' + data);
+                .on('readable', function () { this.readStream(); })
+                .on('read', function (data, lineCount) {
+                    // console.log(lineCount + '. ' + data);
 
                     var tryDone = function () {
                         if (appendsSeen) return done();
@@ -229,7 +239,7 @@ describe('reader', function () {
                             } }
                         )
                         .on('message', function (msg) {
-                            console.log(msg);
+                            // console.log(msg);
                             appendsSeen++;
                         });
                     });
@@ -262,7 +272,7 @@ describe('reader', function () {
             };
 
             reader.createReader(missingFile, noBmReadOpts)
-            .on('readable', function () { this.read(); })
+            .on('readable', function () { this.readStream(); })
             .on('read', function (data) {
                 assert.equal(data, logLine);
                 tryDone();
