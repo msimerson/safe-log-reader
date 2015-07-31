@@ -6,9 +6,28 @@
 
 Read plain or compressed log files from disk, deliver as [batches of] lines to a log consumer. Wait for the log consumer to report success. Repeat ad infinitum.
 
-## Install
+# Install
 
     npm i safe-log-reader
+
+# Usage
+
+````js
+var read = require('safe-line-reader');
+read.createReader(filePath, {
+    batchLimit: 1024,
+    bookmark: {
+        dir: path.resolve('someDir', '.bookmark'),
+    }
+})
+.on('readable', function () { this.readLine(); })
+.on('read', function (line, count) {
+    // do something with this line of text
+})
+.on('end', function (done) {
+    // close up shop and go home
+});
+````
 
 ## Features
 

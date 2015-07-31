@@ -100,7 +100,7 @@ Reader.prototype.endStream = function () {
     });
 };
 
-Reader.prototype.readStream = function () {
+Reader.prototype.readLine = function () {
     var slr = this;
 
     if (this.alreadyRead()) return;
@@ -115,7 +115,7 @@ Reader.prototype.readStream = function () {
     slr.batch.count++;
     slr.lines.position++;
     slr.emit('read', line, slr.lines.position);
-    if (slr.liner.readable) slr.readStream();
+    if (slr.liner.readable) slr.readLine();
 };
 
 Reader.prototype.alreadyRead = function() {
@@ -151,7 +151,7 @@ Reader.prototype.batchIsFull = function() {
                 return;
             }
             slr.batch.count = 0;
-            slr.readStream();
+            slr.readLine();
         });
     });
     return true;

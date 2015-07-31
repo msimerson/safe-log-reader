@@ -1,3 +1,4 @@
+'use strict';
 
 var assert  = require('assert');
 var child   = require('child_process');
@@ -30,7 +31,7 @@ describe('reader', function () {
         
         // console.log(arguments);
         reader.createReader(filePath, noBmReadOpts)
-        .on('readable', function () { this.readStream(); })
+        .on('readable', function () { this.readLine(); })
         .on('read', function (data) {
             assert.equal(data, logLine);
             done();
@@ -42,7 +43,7 @@ describe('reader', function () {
         var filePath = path.join(dataDir, 'test.log.1');
         
         reader.createReader(filePath, noBmReadOpts)
-        .on('readable', function () { this.readStream(); })
+        .on('readable', function () { this.readLine(); })
         .on('read', function (data, lines, bytes) {
             linesSeen++;
             assert.equal(data, logLine);
@@ -55,7 +56,7 @@ describe('reader', function () {
         var filePath = path.join(dataDir, 'test.log.1');
 
         reader.createReader(filePath, noBmReadOpts)
-        .on('readable', function () { this.readStream(); })
+        .on('readable', function () { this.readLine(); })
         .on('read', function (data, lines, bytes) {
             linesSeen++;
             assert.equal(lines, linesSeen);
@@ -65,7 +66,7 @@ describe('reader', function () {
 
     it('reads a gzipped file', function (done) {
         reader.createReader(path.join(dataDir, 'test.log.1.gz'), noBmReadOpts)
-        .on('readable', function () { this.readStream(); })
+        .on('readable', function () { this.readLine(); })
         .on('read', function (data) {
             // console.log(data);
             assert.equal(data, logLine);
@@ -75,7 +76,7 @@ describe('reader', function () {
 
     it.skip('reads a bzip2 compressed file', function (done) {
         reader.createReader(path.join(dataDir, 'test.log.1.bz2'), noBmReadOpts)
-        .on('readable', function () { this.readStream(); })
+        .on('readable', function () { this.readLine(); })
         .on('read', function (data) {
             // console.log(data);
             assert.equal(data, logLine);
@@ -113,7 +114,7 @@ describe('reader', function () {
             };
 
             reader.createReader(appendFile, readerOpts)
-            .on('readable', function () { this.readStream(); })
+            .on('readable', function () { this.readLine(); })
             .on('read', function (data, linesRead) {
                 // console.log('line: ' + linesRead + ', ' + data);
                 if (appendDone) {
@@ -173,7 +174,7 @@ describe('reader', function () {
             newFile(rotateLog, logLine + '\n', function () {
 
                 reader.createReader(rotateLog, readerOpts)
-                .on('readable', function () { this.readStream(); })
+                .on('readable', function () { this.readLine(); })
                 .on('read', function (data, lineCount) {
                     // console.log(lineCount + '. ' + data);
 
@@ -190,7 +191,6 @@ describe('reader', function () {
                     )
                     .on('message', function (msg) {
                         // console.log(msg);
-                        isRotated = true;
                         doAppend();
                     });
                 })
@@ -209,7 +209,7 @@ describe('reader', function () {
             fs.writeFile(rotateLog, logLine + '\n', function () {
 
                 reader.createReader(rotateLog, noBmReadOpts)
-                .on('readable', function () { this.readStream(); })
+                .on('readable', function () { this.readLine(); })
                 .on('read', function (data, lineCount) {
                     // console.log(lineCount + '. ' + data);
 
@@ -272,7 +272,7 @@ describe('reader', function () {
             };
 
             reader.createReader(missingFile, noBmReadOpts)
-            .on('readable', function () { this.readStream(); })
+            .on('readable', function () { this.readLine(); })
             .on('read', function (data) {
                 assert.equal(data, logLine);
                 tryDone();
