@@ -8,24 +8,19 @@ var book    = require('../lib/bookmark')(bookDir);
 
 describe('bookmark', function () {
 
-	var inode = 34454366;
-	var bm = {
-		'file':'/Users/matt/Documents/git/efolder/safe-log-reader/mail.log',
-		'bytes':8193,
-		'lines':45
-	};
+	var testFile = path.resolve('./test', 'data', 'test.log');
 
 	it('saves a bookmark', function (done) {
-		book.save(inode, bm, function (err) {
+		book.save(testFile, 45, function (err) {
 			assert.ifError(err);
 			done();
 		});
 	});
 
 	it('reads a bookmark', function (done) {
-		book.read(inode, function (err, mark) {
+		book.read(testFile, function (err, mark) {
 			assert.ifError(err);
-			assert.deepEqual(bm, mark);
+			assert.equal(mark.lines, 45);
 			done();
 		});
 	});
