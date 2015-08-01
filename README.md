@@ -62,7 +62,7 @@ read.createReader(filePath, {
 
 # Shippers
 
-- [x] [log-ship-elastic-postfix](https://github.com/DoubleCheck/log-ship-elasticsearch-postfix)
+- [x] [log-ship-elastic-postfix](https://github.com/DoubleCheck/log-ship-elastic-postfix)
     - reads batches of log entries
     - parses with [postfix-parser](https://github.com/DoubleCheck/postfix-parser)
     - fetches matching docs from ES

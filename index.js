@@ -114,8 +114,10 @@ Reader.prototype.readLine = function () {
 
     slr.batch.count++;
     slr.lines.position++;
-    slr.emit('read', line, slr.lines.position);
-    if (slr.liner.readable) slr.readLine();
+    slr.emit('read', line, slr.lines.position, function () {
+        if (!slr.liner.readable) return;
+        slr.readLine();  // patient recursion
+    });
 };
 
 Reader.prototype.alreadyRead = function() {
