@@ -14,18 +14,21 @@ var Splitter  = require('./lib/line-splitter');
 function Reader (fileOrPath, options) {
     events.EventEmitter.call(this);
 
+    // the file we're reading lines from
+    this.filePath     = path.resolve(fileOrPath);
+    this.isArchive    = false;
+    this.sawEndOfFile = false;
+    this.startBytes   = 0;
+
     if (!options) options = { bookmark: { } };
     this.watchOpts    = { persistent: true, recursive: false };
-    this.encoding     = options.encoding || 'utf8';
+    this.encoding     = options.encoding   || 'utf8';
     this.noBookmark   = options.noBookmark || false;
     this.bookmark     = new Bookmark(options.bookmark.dir ||
                         path.resolve('./', '.bookmark'));
-    this.isArchive    = false;
-    this.filePath     = path.resolve(fileOrPath);
+
     this.lines        = { start: 0, position: 0, skip: 0 };
     this.batch        = { count: 0, limit: 0 };
-    this.sawEndOfFile = false;
-    this.startBytes   = 0;
 
     if (options.batchLimit) this.batch.limit = options.batchLimit;
 
@@ -40,8 +43,9 @@ Reader.prototype.startReader = function() {
     // does the log file exist?
     fs.stat(slr.filePath, function (err, stat) {
         if (err) {
-            if (err.code === 'ENOENT') {        // non-existent
-                return slr.watch(slr.filePath); // watch for it to appear
+            if (err.code === 'ENOENT') {
+                // console.log('watching for ' + slr.filePath + ' to appear');
+                return slr.watch(slr.filePath);
             }
             return console.error(err);
         }
@@ -53,19 +57,19 @@ Reader.prototype.startReader = function() {
 
         slr.bookmark.read(slr.filePath, function (err, mark) {
             if (err && err.code !== 'ENOENT') {
-                console.error('trying to read bookmark:');
+                console.error('Error trying to read bookmark:');
                 console.error(err.message);
                 return;
             }
 
-            if (!mark) return slr.createStream();  // no bookmark
+            if (mark) {               // has bookmark
+                if (mark.lines) {
+                    // console.log('setting lines.start to: ' + mark.lines);
+                    slr.lines.start = mark.lines;
+                }
 
-            if (mark.lines) {
-                // console.log('setting lines.start to: ' + mark.lines);
-                slr.lines.start = mark.lines;
+                if (mark.size) slr.startBytes = mark.size;
             }
-
-            if (mark.size) slr.startBytes = mark.size;
 
             slr.createStream();  // a Transform stream
         });
@@ -241,6 +245,7 @@ Reader.prototype.resolveAncestor = function (filePath, done) {
 
 Reader.prototype.watch = function (fileOrDir) {
     var slr = this;
+
     // archives don't get appended, don't watch
     if (slr.isArchive) return;
 

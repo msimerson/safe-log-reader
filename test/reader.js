@@ -95,6 +95,7 @@ describe('reader', function () {
             });
         });
 
+        this.timeout(3000);
         it('reads exactly 1 line appended after EOF', function (done) {
             var appendsRead = 0;
             var appendCalled = false;
