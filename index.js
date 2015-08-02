@@ -303,6 +303,9 @@ Reader.prototype.watchRename = function (filename) {
         case 'linux':
             this.renameLinux(filename);
             return;
+        case 'freebsd':
+            this.renameLinux(filename);
+            return;
         default:
             // falls through
             logger.error('report this as GitHub Issue:\n' +

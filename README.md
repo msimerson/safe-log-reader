@@ -39,7 +39,7 @@ read.createReader(filePath, {
             - [x] fs.watch tested on:
                 - [x] Mac OS X
                 - [x] Linux
-                - [ ] FreeBSD
+                - [x] FreeBSD
         - [ ] continues reading old log file until quiet (necessary?)
     - [ ] file truncation (echo '' > foo.log)
     - [x] watches for non-existent log to appear
