@@ -50,29 +50,7 @@ Reader.prototype.startReader = function() {
             return console.error(err);
         }
 
-        if (slr.noBookmark) {                   // for testing
-            // console.log('noBookmark set');
-            return slr.createStream();
-        }
-
-        slr.bookmark.read(slr.filePath, function (err, mark) {
-            if (err && err.code !== 'ENOENT') {
-                console.error('Error trying to read bookmark:');
-                console.error(err.message);
-                return;
-            }
-
-            if (mark) {               // has bookmark
-                if (mark.lines) {
-                    // console.log('setting lines.start to: ' + mark.lines);
-                    slr.lines.start = mark.lines;
-                }
-
-                if (mark.size) slr.startBytes = mark.size;
-            }
-
-            slr.createStream();  // a Transform stream
-        });
+        slr.createStream();  // a Transform stream
     });
 };
 
@@ -149,55 +127,75 @@ Reader.prototype.batchIsFull = function() {
     console.log('batchlimit: ' + this.batch.count);
     var slr = this;
 
-    slr.emit('end', function () {
+    slr.emit('end', function (err, pause) {
         slr.bookmark.save(slr.filePath, slr.lines.position, function (err) {
             if (err) {
                 console.error(err);
                 console.error('bookmark save failed, halting');
                 return;
             }
+            console.log('bookmark advanced: ' + slr.lines.position);
             slr.batch.count = 0;
-            slr.readLine();
+            setTimeout(function () {
+                slr.readLine();
+            }, (pause || 1) * 1000);
         });
     });
     return true;
 };
 
 Reader.prototype.createStream = function () {
-
+    var slr = this;
     // entered when:
     //     new startup
     //     after EOF, when fs.watch saw a change
     //
     // with transform streams, files/archives are closed for us
-    // automatically at EOF. Resetting the line position upon
-    // open.
+    // automatically at EOF. Reset the line position upon (re)open.
     this.lines.position = 0;
 
-    // the previous splitter is gone after EOF, start a new one
+    // splitters are gone after EOF, always start a new one
     this.lineSplitter();
 
-    if (/\.gz$/.test( this.filePath)) return this.createStreamGzip();
-    if (/\.bz2$/.test(this.filePath)) return this.createStreamBz2();
+    slr.bookmark.read(slr.filePath, function (err, mark) {
+        if (err && err.code !== 'ENOENT') {
+            console.error('Error trying to read bookmark:');
+            console.error(err.message);
+            return;
+        }
 
-    var fileOpts = {
-        autoClose: true,
-        encoding: this.encoding,
-    };
+        if (mark && !slr.noBookmark) {
+            if (mark.lines) {
+                console.log('setting lines.start to: ' + mark.lines);
+                slr.lines.start = mark.lines;
+            }
+        }
 
-    if (this.sawEndOfFile && this.startBytes) {
-        // the only time this is safe is when we've read to EOF. Otherwise,
-        // the byte position contains buffered data that hasn't been
-        // emitted as lines.
+        if (/\.gz$/.test( slr.filePath)) return slr.createStreamGzip();
+        if (/\.bz2$/.test(slr.filePath)) return slr.createStreamBz2();
 
-        // the alternative to 'start' here, is splitting the entire file
-        // into lines (again) and counting lines. Avoid that when possible.
-        fileOpts.start = this.startBytes;  // read from bookmark
-        this.sawEndOfFile = false;
-        this.startBytes = 0;
-    }
+        // options used only by plain text log files
+        var fileOpts = {
+            autoClose: true,
+            encoding: slr.encoding,
+        };
 
-    fs.createReadStream(this.filePath, fileOpts).pipe(this.liner);
+        if (mark && !slr.noBookmark) {
+            // the only time byte position is safe is when we've read to EOF.
+            // Otherwise, the byte position contains buffered data that hasn't
+            // been emitted as lines.
+
+            // the alternative to 'start' here, is splitting the entire file
+            // into lines (again) and counting lines. Avoid that when possible.
+            if (slr.sawEndOfFile && mark.size) {
+                fileOpts.start = mark.size;
+                slr.sawEndOfFile = false;
+                slr.lines.position = mark.lines;
+            }
+        }
+
+        fs.createReadStream(slr.filePath, fileOpts).pipe(slr.liner);
+    });
 };
 
 Reader.prototype.createStreamGzip = function() {
@@ -313,7 +311,6 @@ Reader.prototype.renameLinux = function (filename) {
         if (err) {
             if (err.code === 'ENOENT') {  // mv or rm
                 this.lines.start = 0;
-                this.lines.position = 0;
                 // watch parent dir for file to reappear
                 this.watch(path.dirname(this.filePath));
                 return;
@@ -332,7 +329,6 @@ Reader.prototype.renameLinux = function (filename) {
 Reader.prototype.renameMacOS = function (filename) {
 
     this.lines.start = 0;
-    this.lines.position = 0;
 
     // log file just (re)appeared
     if (filename === path.basename(this.filePath)) {
