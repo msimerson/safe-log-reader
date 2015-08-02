@@ -12,7 +12,7 @@ describe('bookmark', function () {
 
 	it('creates missing bookmark dir', function (done) {
 
-		var missingDir = path.resolve('test', 'nonexistent');
+		var missingDir = path.resolve('test', 'missing-dir');
 		var book = require('../lib/bookmark')(missingDir);
 		book.createDir(function () {
 			fs.stat(missingDir, function (err, stat) {

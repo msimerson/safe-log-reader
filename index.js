@@ -213,7 +213,7 @@ Reader.prototype.createStreamGzip = function() {
         .pipe(zlib.createGunzip())
         .pipe(this.liner);
 };
-
+/*
 Reader.prototype.createStreamBz2 = function() {
     this.isArchive = true;
 
@@ -221,7 +221,7 @@ Reader.prototype.createStreamBz2 = function() {
     // rather spawn a child process using CLI bunzip2. TODO
     throw('no bzip2 support yet');
 };
-
+*/
 Reader.prototype.lineSplitter = function () {
     var slr = this;
 

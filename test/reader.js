@@ -4,6 +4,7 @@ var assert  = require('assert');
 var child   = require('child_process');
 var fs      = require('fs');
 var path    = require('path');
+var util    = require('util');
 
 var readerOpts = {
     bookmark: { dir: path.resolve('test', '.bookmarks') },
@@ -291,4 +292,62 @@ describe('reader', function () {
             });
         });
     });
+
+    describe('unreadable file', function () {
+        it('reads nothing', function (done) {
+            var filePath = path.join(dataDir, 'test-no-perm.log');
+
+            setTimeout(function () {
+                done();
+            }, 100);
+
+            reader.createReader(filePath, readerOpts)
+            .on('readable', function () { assert.ok(false); })
+            .on('read', function (data) {
+                assert.equal(data, false);
+            });
+        });
+
+        it('does not watch', function (done) {
+            var filePath = path.join(dataDir, 'test-no-perm.log');
+
+            var r = reader.createReader(filePath, readerOpts)
+            .on('readable', function () { assert.ok(false); })
+            .on('read', function (data) {
+                assert.equal(data, false);
+            });
+
+            process.nextTick(function(){
+                assert.equal(r.watcher, undefined);
+                r.watcher = true;
+                r.endStream();
+                // console.log(r);
+
+                process.nextTick(function(){
+                    setTimeout(function () {
+                        done();
+                    }, 100);
+                });
+            });
+        });
+    });
+
+    it('emits an end when batch is full', function (done) {
+        var filePath = path.join(dataDir, 'test.log');
+
+        var r = reader.createReader(filePath, noBmReadOpts)
+        .on('readable', function () {
+            r.filePath = './non-existent';
+            this.batch.limit = 5;
+            this.batch.count = 5;
+            // this.readLine();
+            r.batchIsFull();
+        })
+        .on('read', function (data) {
+            assert.equal(data, undefined);
+        })
+        .on('end', function (err, pause) {
+            done();
+        });
+    });    
 });

@@ -6,6 +6,9 @@ node_js:
 
 services:
 
+before_script:
+    - chmod -r ./test/data/test-no-perms.log
+
 after_success:
     - npm run coveralls
 
