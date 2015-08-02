@@ -300,10 +300,8 @@ Reader.prototype.watchRename = function (filename) {
         case 'darwin':
             this.renameMacOS(filename);
             return;
-        case 'linux':
-            this.renameLinux(filename);
-            return;
         case 'freebsd':
+        case 'linux':
             this.renameLinux(filename);
             return;
         default:
