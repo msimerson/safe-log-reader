@@ -8,6 +8,7 @@ var path      = require('path');
 var util      = require('util');
 var zlib      = require('zlib');
 
+var logger    = require('./lib/logger');
 var Bookmark  = require('./lib/bookmark');
 var Splitter  = require('./lib/line-splitter');
 
@@ -44,10 +45,10 @@ Reader.prototype.startReader = function() {
     fs.stat(slr.filePath, function (err, stat) {
         if (err) {
             if (err.code === 'ENOENT') {
-                // console.log('watching for ' + slr.filePath + ' to appear');
+                logger.info('watching for ' + slr.filePath + ' to appear');
                 return slr.watch(slr.filePath);
             }
-            return console.error(err);
+            return logger.error(err);
         }
 
         slr.createStream();  // a Transform stream
@@ -56,12 +57,12 @@ Reader.prototype.startReader = function() {
 
 Reader.prototype.endStream = function () {
     var slr = this;
-    // console.log('end of ' + this.filePath);
+    logger.info('end of ' + this.filePath);
 
     this.sawEndOfFile = true;
 
     if (slr.watcher) {
-        console.log(slr.filePath + ' already being watched');
+        logger.info('\talready watching: ' + slr.filePath);
         return;
     }
 
@@ -70,12 +71,15 @@ Reader.prototype.endStream = function () {
         slr.watch(slr.filePath);
     };
 
-    if (slr.noBookmark) return notifyAndWatch();
+    if (slr.noBookmark) {
+        console.info('\tnoBookmark=true, ignoring');
+        return notifyAndWatch();
+    }
 
     slr.bookmark.save(slr.filePath, slr.lines.position, function (err) {
         if (err) {
-            console.error(err);
-            console.error('unable to save bookmark, refusing to continue');
+            logger.error(err);
+            logger.error('unable to save bookmark, refusing to continue');
             return;
         }
         notifyAndWatch();
@@ -96,10 +100,9 @@ Reader.prototype.readLine = function () {
 
     slr.batch.count++;
     slr.lines.position++;
-    slr.emit('read', line, slr.lines.position, function () {
-        if (!slr.liner.readable) return;
-        slr.readLine();  // patient recursion
-    });
+    slr.emit('read', line, slr.lines.position);
+    if (!slr.liner.readable) return;
+    slr.readLine();
 };
 
 Reader.prototype.alreadyRead = function() {
@@ -113,7 +116,7 @@ Reader.prototype.alreadyRead = function() {
     }
 
     if (slr.lines.skip) {
-        // console.log('skipped ' + slr.lines.skip + ' lines');
+        logger.info('\tskipped ' + slr.lines.skip + ' lines');
         slr.lines.skip = 0;
     }
 
@@ -124,21 +127,24 @@ Reader.prototype.batchIsFull = function() {
     if (!this.batch.limit) return;
     if (this.batch.count < this.batch.limit) return;
 
-    console.log('batchlimit: ' + this.batch.count);
+    logger.info('batchlimit: ' + this.batch.count);
     var slr = this;
 
     slr.emit('end', function (err, pause) {
         slr.bookmark.save(slr.filePath, slr.lines.position, function (err) {
             if (err) {
-                console.error(err);
-                console.error('bookmark save failed, halting');
+                logger.error(err);
+                logger.error('bookmark save failed, halting');
                 return;
             }
-            console.log('bookmark advanced: ' + slr.lines.position);
             slr.batch.count = 0;
+            // the log shipper can ask us to wait 'pause' seconds before
+            // emitting the next batch. This is useful as a backoff mechanism.
+            var delay = pause || 5;
             setTimeout(function () {
+                console.log('\t\tpause ' + delay + 'seconds');
                 slr.readLine();
-            }, (pause || 1) * 1000);
+            }, delay * 1000);
         });
     });
     return true;
@@ -159,14 +165,14 @@ Reader.prototype.createStream = function () {
 
     slr.bookmark.read(slr.filePath, function (err, mark) {
         if (err && err.code !== 'ENOENT') {
-            console.error('Error trying to read bookmark:');
-            console.error(err.message);
+            logger.error('Error trying to read bookmark:');
+            logger.error(err.message);
             return;
         }
 
         if (mark && !slr.noBookmark) {
             if (mark.lines) {
-                console.log('setting lines.start to: ' + mark.lines);
+                logger.debug('\tlines.start: ' + mark.lines);
                 slr.lines.start = mark.lines;
             }
         }
@@ -188,12 +194,14 @@ Reader.prototype.createStream = function () {
             // the alternative to 'start' here, is splitting the entire file
             // into lines (again) and counting lines. Avoid that when possible.
             if (slr.sawEndOfFile && mark.size) {
+                logger.info('\tbytes.start: ' + mark.size);
                 fileOpts.start = mark.size;
                 slr.sawEndOfFile = false;
                 slr.lines.position = mark.lines;
             }
         }
 
+        logger.debug('opening for read: ' + slr.filePath);
         fs.createReadStream(slr.filePath, fileOpts).pipe(slr.liner);
     });
 };
@@ -217,28 +225,27 @@ Reader.prototype.createStreamBz2 = function() {
 Reader.prototype.lineSplitter = function () {
     var slr = this;
 
-    this.liner = new Splitter({
+    slr.liner = new Splitter({
         encoding: this.encoding,   // for archives
     })
-    .on('readable', function () {
-        this.emit('readable');
-    }.bind(this))
-    .on('end', slr.endStream.bind(slr));
+    .on('readable', function () { slr.emit('readable'); })
+    .on('end',      function () { slr.endStream();      });
 };
 
 Reader.prototype.resolveAncestor = function (filePath, done) {
+    var slr = this;
     // walk up a directory tree until an existing one is found
     fs.stat(filePath, function (err, stat) {
         if (err) {
-            // console.log('resolveAncestor: ' + err.code);
+            // logger.info('resolveAncestor: ' + err.code);
             if (err.code === 'ENOENT') {
-                return this.resolveAncestor(path.dirname(filePath), done);
+                return slr.resolveAncestor(path.dirname(filePath), done);
             }
             return done(err);
         }
-        // console.log('\tresolveAncestor: ' + filePath);
+        logger.debug('\tresolveAncestor: ' + filePath);
         done(null, filePath);
-    }.bind(this));
+    });
 };
 
 Reader.prototype.watch = function (fileOrDir) {
@@ -248,8 +255,9 @@ Reader.prototype.watch = function (fileOrDir) {
     if (slr.isArchive) return;
 
     slr.resolveAncestor(fileOrDir, function (err, existentPath) {
-        if (err) return console.error(err);
+        if (err) return logger.error(err);
 
+        logger.info('watching ' + existentPath);
         slr.watcher = fs.watch(
             existentPath,
             slr.watchOpts,
@@ -259,7 +267,7 @@ Reader.prototype.watch = function (fileOrDir) {
 };
 
 Reader.prototype.watchEvent = function (event, filename) {
-    // console.log('watcher saw ' + event + ' on ' + filename);
+    logger.debug('watcher saw ' + event + ' on ' + filename);
     switch (event) {
         case 'change':
             this.watchChange(filename);
@@ -284,7 +292,7 @@ Reader.prototype.watchChange = function (filename) {
 };
 
 Reader.prototype.watchRename = function (filename) {
-    // console.log('\trename: ' + filename);
+    // logger.info('\trename: ' + filename);
     this.watcher.close();
     this.watcher = null;
 
@@ -297,7 +305,7 @@ Reader.prototype.watchRename = function (filename) {
             return;
         default:
             // falls through
-            console.error('report this as GitHub Issue:\n' +
+            logger.error('report this as GitHub Issue:\n' +
                 '\trename: ' + filename + ' on ' + process.platform
             );
     }
@@ -306,7 +314,7 @@ Reader.prototype.watchRename = function (filename) {
 Reader.prototype.renameLinux = function (filename) {
     // we only get the source filename (foo.log), not dest
 
-    // and we don't know what happened (create, delete, move)
+    // what happened? (create, delete, move)
     fs.stat(this.filePath, function (err, stats) {
         if (err) {
             if (err.code === 'ENOENT') {  // mv or rm
@@ -315,11 +323,10 @@ Reader.prototype.renameLinux = function (filename) {
                 this.watch(path.dirname(this.filePath));
                 return;
             }
-            console.error(err);
+            logger.error(err);
         }
 
-        // console.log(stats);
-        // console.log('\treading ' + this.filePath);
+        logger.debug(stats);
         setTimeout(function () {
             this.createStream();
         }.bind(this), 100);
@@ -327,20 +334,20 @@ Reader.prototype.renameLinux = function (filename) {
 };
 
 Reader.prototype.renameMacOS = function (filename) {
+    var slr = this;
 
-    this.lines.start = 0;
+    slr.lines.start = 0;
 
     // log file just (re)appeared
-    if (filename === path.basename(this.filePath)) {
-        // console.log('\treading ' + this.filePath);
+    if (filename === path.basename(slr.filePath)) {
         setTimeout(function () {
-            this.createStream();
-        }.bind(this), 100);
+            slr.createStream();
+        }, 100);
         return;
     }
 
-    // log file moved away (foo.log -> foo.log.1)
-    this.watch(path.dirname(this.filePath));
+    // log file moved away (likely: foo.log -> foo.log.1)
+    slr.watch(path.dirname(slr.filePath));
 };
 
 module.exports = {
