@@ -17,16 +17,21 @@
     "blanket": "^1.1.7",
     "coveralls": "^2.11.2",
     "mocha": "^2.2.5",
-    "mocha-lcov-reporter": "0.0.2"
+    "mocha-lcov-reporter": "0.0.2",
+    "travis-cov": "^0.2.5"
   },
   "config": {
     "blanket": {
       "pattern": [ "index.js", "lib" ],
       "data-cover-never": [ "node_modules", "test" ]
+    },
+    "travis-cov": {
+      "threshold": 100
     }
   },
   "scripts": {
     "test": "NODE_ENV=test mocha",
+    "coverage": "COVERAGE=1 ./node_modules/.bin/mocha --require blanket --reporter travis-cov",
     "coveralls": "COVERAGE=1 ./node_modules/.bin/mocha --require blanket --reporter mocha-lcov-reporter | ./node_modules/coveralls/bin/coveralls.js"
   },
   "optionalDependencies": {}

@@ -1,5 +1,6 @@
 mail.log
 node_modules
+npm-debug.log
 test/data/append.log*
 test/data/rotate*
 test/.bookmarks/*
