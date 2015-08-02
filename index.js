@@ -72,7 +72,7 @@ Reader.prototype.endStream = function () {
     };
 
     if (slr.noBookmark) {
-        console.info('\tnoBookmark=true, ignoring');
+        logger.info('\tnoBookmark=true, ignoring');
         return notifyAndWatch();
     }
 
@@ -178,7 +178,7 @@ Reader.prototype.createStream = function () {
         }
 
         if (/\.gz$/.test( slr.filePath)) return slr.createStreamGzip();
-        if (/\.bz2$/.test(slr.filePath)) return slr.createStreamBz2();
+        // if (/\.bz2$/.test(slr.filePath)) return slr.createStreamBz2();
 
         // options used only by plain text log files
         var fileOpts = {

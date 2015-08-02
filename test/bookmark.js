@@ -37,4 +37,16 @@ describe('bookmark', function () {
 			done();
 		});
 	});
+
+	it('errors on unwritable bookmark dir', function (done) {
+
+		var noPermDir = path.resolve('test', 'data.nowrite', 'any');
+		var book = require('../lib/bookmark')(noPermDir);
+		book.createDir(function () {
+			fs.stat(noPermDir, function (err, stat) {
+				assert.ok(err);
+				done();
+			});
+		});
+	});
 });

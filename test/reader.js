@@ -346,7 +346,8 @@ describe('reader', function () {
         .on('read', function (data) {
             assert.equal(data, undefined);
         })
-        .on('end', function (err, pause) {
+        .on('end', function (cb) {
+            cb();
             done();
         });
     });    
