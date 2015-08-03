@@ -1,8 +1,14 @@
 {
   "name": "safe-log-reader",
   "description": "Safe Log Reader",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "private": false,
+  "keywords": [
+    "log",
+    "reader",
+    "tail",
+    "watch"
+  ],
   "homepage": "https://github.com/DoubleCheck/safe-log-reader",
   "bugs": {
     "url": "https://github.com/DoubleCheck/safe-log-reader/issues"
