@@ -26,7 +26,9 @@ describe('logger', function () {
         });
 
         it('error', function () {
+            delete process.env.NODE_ENV;
             assert.ifError(logger.error('test error'));
+            process.env.NODE_ENV='test';
         });
      });
 });

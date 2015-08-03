@@ -59,12 +59,11 @@ Reader.prototype.endStream = function () {
     var slr = this;
     logger.info('end of ' + this.filePath);
 
-    this.sawEndOfFile = true;
-
-    if (slr.watcher) {
-        logger.info('\talready watching: ' + slr.filePath);
+    if (this.sawEndOfFile) {
+        logger.debug('endStream: dampening extra EOF');
         return;
     }
+    this.sawEndOfFile = true;
 
     var notifyAndWatch = function () {
         slr.emit('end');
@@ -93,10 +92,7 @@ Reader.prototype.readLine = function () {
     if (this.batchIsFull()) return;
 
     var line = slr.liner.read();
-    if (line === null) {              // EOF
-        this.sawEndOfFile = true;
-        return;
-    }
+    if (line === null) return;              // EOF
 
     slr.batch.count++;
     slr.lines.position++;
@@ -142,7 +138,7 @@ Reader.prototype.batchIsFull = function() {
             // emitting the next batch. This is useful as a backoff mechanism.
             var delay = pause || 5;
             setTimeout(function () {
-                console.log('\t\tpause ' + delay + 'seconds');
+                console.log('\t\tpause ' + delay + ' seconds');
                 slr.readLine();
             }, delay * 1000);
         });
