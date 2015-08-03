@@ -20,6 +20,7 @@ function Reader (fileOrPath, options) {
     this.isArchive    = false;
     this.sawEndOfFile = false;
     this.startBytes   = 0;
+    this.watchDelay   = process.env.NODE_ENV === 'test' ? 100 : 2000;
 
     if (!options) options = { bookmark: { } };
     this.watchOpts    = { persistent: true, recursive: false };
@@ -27,6 +28,7 @@ function Reader (fileOrPath, options) {
     this.noBookmark   = options.noBookmark || false;
     this.bookmark     = new Bookmark(options.bookmark.dir ||
                         path.resolve('./', '.bookmark'));
+    if (options.watchDelay) this.watchDelay = options.watchDelay * 1000;
 
     this.lines        = { start: 0, position: 0, skip: 0 };
     this.batch        = { count: 0, limit: 0 };
@@ -284,7 +286,7 @@ Reader.prototype.watchChange = function (filename) {
     slr.watcher = null;
 
     // give the events a chance to settle
-    setTimeout(function () { slr.createStream(); }, 100);
+    setTimeout(function () { slr.createStream(); }, slr.watchDelay);
 };
 
 Reader.prototype.watchRename = function (filename) {
@@ -309,15 +311,16 @@ Reader.prototype.watchRename = function (filename) {
 };
 
 Reader.prototype.renameLinux = function (filename) {
+    var slr = this;
     // we only get the source filename (foo.log), not dest
 
     // what happened? (create, delete, move)
-    fs.stat(this.filePath, function (err, stats) {
+    fs.stat(slr.filePath, function (err, stats) {
         if (err) {
             if (err.code === 'ENOENT') {  // mv or rm
-                this.lines.start = 0;
+                slr.lines.start = 0;
                 // watch parent dir for file to reappear
-                this.watch(path.dirname(this.filePath));
+                slr.watch(path.dirname(slr.filePath));
                 return;
             }
             logger.error(err);
@@ -325,9 +328,9 @@ Reader.prototype.renameLinux = function (filename) {
 
         logger.debug(stats);
         setTimeout(function () {
-            this.createStream();
-        }.bind(this), 100);
-    }.bind(this));
+            slr.createStream();
+        }, slr.watchDelay);
+    });
 };
 
 Reader.prototype.renameMacOS = function (filename) {
@@ -339,7 +342,7 @@ Reader.prototype.renameMacOS = function (filename) {
     if (filename === path.basename(slr.filePath)) {
         setTimeout(function () {
             slr.createStream();
-        }, 100);
+        }, slr.watchDelay);
         return;
     }
 

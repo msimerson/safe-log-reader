@@ -8,7 +8,7 @@ services:
 
 before_script:
     - chmod ugo-r  ./test/data/test-no-perms.log
-    - chmod ugo-rw ./test/data.nowrite
+    - chmod ugo-rw ./test/data/nowrite
 
 after_success:
     - npm run coveralls
