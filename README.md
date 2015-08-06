@@ -105,6 +105,7 @@ When watching growing log files, S-L-R also uses byte positions. Having read
 to the end of a file, we can know *that* byte position does coincide with
 the end of a log line.
 
+<sub>Copyright 2015 by eFolder, Inc.</sub>
 
 
 [ci-img]: https://travis-ci.org/DoubleCheck/safe-log-reader.svg

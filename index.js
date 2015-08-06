@@ -168,14 +168,12 @@ Reader.prototype.createStream = function () {
             return;
         }
 
-        if (mark && !slr.noBookmark) {
-            if (mark.lines) {
-                logger.debug('\tlines.start: ' + mark.lines);
-                slr.lines.start = mark.lines;
-            }
+        if (mark && !slr.noBookmark && mark.lines) {
+            logger.debug('\tlines.start: ' + mark.lines);
+            slr.lines.start = mark.lines;
         }
 
-        if (/\.gz$/.test( slr.filePath)) return slr.createStreamGzip();
+        if (/\.gz$/.test(slr.filePath)) return slr.createStreamGzip();
         // if (/\.bz2$/.test(slr.filePath)) return slr.createStreamBz2();
 
         // options used only by plain text log files
