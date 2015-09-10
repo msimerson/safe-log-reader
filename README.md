@@ -40,7 +40,7 @@ read.createReader(filePath, {
                 - [x] Mac OS X
                 - [x] Linux
                 - [x] FreeBSD
-        - [ ] continues reading old log file until quiet (necessary?)
+        - [ ] continues reading old log file until quiet
     - [ ] file truncation (echo '' > foo.log)
     - [x] watches for non-existent log to appear
 - [x] Read compressed log files
