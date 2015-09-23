@@ -43,6 +43,6 @@ module.exports = function(grunt) {
 
   grunt.registerTask('lint',    ['eslint']);
   grunt.registerTask('test',    ['mochaTest']);
-  grunt.registerTask('version', ['versioncheck'])
+  grunt.registerTask('version', ['versioncheck']);
   grunt.registerTask('default', ['eslint','mochaTest']);
 };

@@ -40,7 +40,6 @@ describe('bookmark', function () {
   });
 
   it('errors on unwritable bookmark dir', function (done) {
-
     var noPermDir = path.resolve('test', 'data.nowrite', 'any');
     var book = require('../lib/bookmark')(noPermDir);
     book.createDir(function () {
@@ -48,6 +47,16 @@ describe('bookmark', function () {
         assert.ok(err);
         done();
       });
+    });
+  });
+
+  it('errs on unreadable bookmark', function (done) {
+    var noReadDir = path.resolve('test', 'data', 'noread');
+    var book = require('../lib/bookmark')(noReadDir);
+    // console.log(book);
+    book.read(path.resolve(noReadDir, 'file'), function (err, mark) {
+      assert.ok(err);
+      done();
     });
   });
 });
