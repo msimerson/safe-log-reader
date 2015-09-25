@@ -40,6 +40,7 @@ describe('bookmark', function () {
   });
 
   it('errors on unwritable bookmark dir', function (done) {
+
     var noPermDir = path.resolve('test', 'data.nowrite', 'any');
     var book = require('../lib/bookmark')(noPermDir);
     book.createDir(function () {
