@@ -77,14 +77,7 @@ Reader.prototype.endStream = function () {
     return notifyAndWatch();
   }
 
-  slr.bookmark.save(slr.filePath, slr.lines.position, function (err) {
-    if (err) {
-      logger.error(err);
-      logger.error('unable to save bookmark, refusing to continue');
-      return;
-    }
-    notifyAndWatch();
-  });
+  notifyAndWatch();
 };
 
 Reader.prototype.readLine = function () {
@@ -99,8 +92,6 @@ Reader.prototype.readLine = function () {
   slr.batch.count++;
   slr.lines.position++;
   slr.emit('read', line, slr.lines.position);
-  if (!slr.liner.readable) return;
-  slr.readLine();
 };
 
 Reader.prototype.alreadyRead = function() {
@@ -125,27 +116,34 @@ Reader.prototype.batchIsFull = function() {
   if (!this.batch.limit) return;
   if (this.batch.count < this.batch.limit) return;
 
-  logger.info('batchlimit: ' + this.batch.count);
+  logger.info('batchIsFull, limit: ' + this.batch.limit +
+      ' count: ' + this.batch.count);
+
   var slr = this;
 
-  slr.emit('end', function (err, delay) {
-    slr.bookmark.save(slr.filePath, slr.lines.position, function (err) {
-      if (err) {
-        logger.error(err);
-        logger.error('bookmark save failed, halting');
-        return;
-      }
-      slr.batch.count = 0;
+  process.nextTick(function () {
+    slr.emit('drain', function (err, delay) {
+      slr.bookmark.save(slr.filePath, slr.lines.position, function (err) {
+        if (err) {
+          logger.error(err);
+          logger.error('bookmark save failed, halting');
+          return;
+        }
+        slr.batch.count = 0;
+        if (!slr.liner.readable) return;
 
-      // the log shipper can ask us to wait 'delay' seconds before
-      // emitting the next batch. This is useful as a backoff mechanism.
-      if (isNaN(delay)) delay = 5;
-      if (!delay) return slr.readLine();
+        // the log shipper can ask us to wait 'delay' seconds before
+        // emitting the next batch. This is useful as a backoff mechanism.
+        if (isNaN(delay)) delay = 5;
+        if (delay) {
+          logger.info('\t\tpause ' + delay + ' seconds');
+        }
 
-      setTimeout(function () {
-        console.log('\t\tpause ' + delay + ' seconds');
-        slr.readLine();
-      }, delay * 1000);
+        setTimeout(function () {
+          slr.readLine();
+          slr.readLine();
+        }, delay * 1000);
+      });
     });
   });
   return true;

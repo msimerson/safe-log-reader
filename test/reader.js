@@ -333,7 +333,7 @@ describe('reader', function () {
     });
   });
 
-  it('emits an end when batch is full', function (done) {
+  it('emits a drain when batch is full', function (done) {
     var filePath = path.join(dataDir, 'test.log');
 
     var r = reader.createReader(filePath, noBmReadOpts)
@@ -347,7 +347,7 @@ describe('reader', function () {
     .on('read', function (data) {
       assert.equal(data, undefined);
     })
-    .on('end', function (cb) {
+    .on('drain', function (cb) {
       cb();
       done();
     });
