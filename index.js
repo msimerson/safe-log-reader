@@ -31,9 +31,10 @@ function Reader (fileOrPath, options) {
   if (options.watchDelay) this.watchDelay = options.watchDelay * 1000;
 
   this.lines        = { start: 0, position: 0, skip: 0 };
-  this.batch        = { count: 0, limit: 0 };
+  this.batch        = { count: 0, limit: 0, delay: 0 };
 
   if (options.batchLimit) this.batch.limit = options.batchLimit;
+  if (options.batchDelay) this.batch.delay = options.batchDelay;
 
   this.startReader();
 }
@@ -61,30 +62,21 @@ Reader.prototype.endStream = function () {
   var slr = this;
   logger.info('end of ' + this.filePath);
 
-  if (this.sawEndOfFile) {
+  if (slr.sawEndOfFile) {
     logger.debug('endStream: dampening extra EOF');
     return;
   }
-  this.sawEndOfFile = true;
+  slr.sawEndOfFile = true;
 
   var notifyAndWatch = function () {
+    slr.emit('drain', function () {
+      slr.batchSaveDone(arguments);
+    });
     slr.emit('end');
     slr.watch(slr.filePath);
   };
 
-  if (slr.noBookmark) {
-    logger.info('\tnoBookmark=true, ignoring');
-    return notifyAndWatch();
-  }
-
-  slr.bookmark.save(slr.filePath, slr.lines.position, function (err) {
-    if (err) {
-      logger.error(err);
-      logger.error('unable to save bookmark, refusing to continue');
-      return;
-    }
-    notifyAndWatch();
-  });
+  notifyAndWatch();
 };
 
 Reader.prototype.readLine = function () {
@@ -99,8 +91,6 @@ Reader.prototype.readLine = function () {
   slr.batch.count++;
   slr.lines.position++;
   slr.emit('read', line, slr.lines.position);
-  if (!slr.liner.readable) return;
-  slr.readLine();
 };
 
 Reader.prototype.alreadyRead = function() {
@@ -122,33 +112,45 @@ Reader.prototype.alreadyRead = function() {
 };
 
 Reader.prototype.batchIsFull = function() {
-  if (!this.batch.limit) return;
-  if (this.batch.count < this.batch.limit) return;
-
-  logger.info('batchlimit: ' + this.batch.count);
   var slr = this;
+  if (!slr.batch.limit) return;
+  if (slr.batch.count < slr.batch.limit) return;
 
-  slr.emit('end', function (err, delay) {
-    slr.bookmark.save(slr.filePath, slr.lines.position, function (err) {
-      if (err) {
-        logger.error(err);
-        logger.error('bookmark save failed, halting');
-        return;
-      }
-      slr.batch.count = 0;
+  logger.debug('batchIsFull, limit: ' + slr.batch.limit +
+      ' count: ' + slr.batch.count);
 
-      // the log shipper can ask us to wait 'delay' seconds before
-      // emitting the next batch. This is useful as a backoff mechanism.
-      if (isNaN(delay)) delay = 5;
-      if (!delay) return slr.readLine();
-
-      setTimeout(function () {
-        console.log('\t\tpause ' + delay + ' seconds');
-        slr.readLine();
-      }, delay * 1000);
+  process.nextTick(function () {
+    slr.emit('drain', function () {
+      slr.batchSaveDone(arguments);
     });
   });
   return true;
+};
+
+Reader.prototype.batchSaveDone = function (err, delay) {
+  var slr = this;
+  slr.bookmark.save(slr.filePath, slr.lines.position, function (err) {
+    if (err) {
+      logger.error(err);
+      logger.error('bookmark save failed, halting');
+      return;
+    }
+    slr.batch.count = 0;
+    if (!slr.liner.readable) return;
+
+    // the log shipper can ask us to wait 'delay' seconds before
+    // emitting the next batch. This is useful as a backoff mechanism.
+    if (isNaN(delay)) delay = slr.batch.delay;
+    if (delay) {
+      console.log('\t\tpause ' + delay + ' seconds');
+    }
+
+    setTimeout(function () {
+      for (var i=0; i<=slr.batch.limit; i++) {
+        if (slr.liner.readable) slr.readLine();
+      }
+    }, delay * 1000);
+  });
 };
 
 Reader.prototype.createStream = function () {
