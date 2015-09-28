@@ -31,9 +31,10 @@ function Reader (fileOrPath, options) {
   if (options.watchDelay) this.watchDelay = options.watchDelay * 1000;
 
   this.lines        = { start: 0, position: 0, skip: 0 };
-  this.batch        = { count: 0, limit: 0 };
+  this.batch        = { count: 0, limit: 0, delay: 0 };
 
   if (options.batchLimit) this.batch.limit = options.batchLimit;
+  if (options.batchDelay) this.batch.delay = options.batchDelay;
 
   this.startReader();
 }
@@ -139,7 +140,7 @@ Reader.prototype.batchSaveDone = function (err, delay) {
 
     // the log shipper can ask us to wait 'delay' seconds before
     // emitting the next batch. This is useful as a backoff mechanism.
-    if (isNaN(delay)) delay = 5;
+    if (isNaN(delay)) delay = slr.batch.delay;
     if (delay) {
       console.log('\t\tpause ' + delay + ' seconds');
     }

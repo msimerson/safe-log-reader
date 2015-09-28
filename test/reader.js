@@ -51,6 +51,24 @@ describe('reader', function () {
     });
   });
 
+  it('reads batches of lines', function (done) {
+    var linesSeen = 0;
+    var filePath = path.join(dataDir, 'batch.log');
+    var batchOpts = JSON.parse(JSON.stringify(readerOpts));
+    batchOpts.batchLimit = 2;
+
+    reader.createReader(filePath, batchOpts)
+    .on('readable', function () { this.readLine(); })
+    .on('read', function (data, lines, bytes) {
+      linesSeen++;
+      assert.equal(data, logLine);
+      if (linesSeen === 9) done();
+    })
+    .on('drain', function (done) {
+      done(null, 0);
+    });
+  });
+
   it('maintains an accurate line counter', function (done) {
     var linesSeen = 0;
     var filePath = path.join(dataDir, 'test.log.1');
