@@ -90,8 +90,8 @@ Reader.prototype.endStream = function () {
 Reader.prototype.readLine = function () {
   var slr = this;
 
-  if (this.alreadyRead()) return;
-  if (this.batchIsFull()) return;
+  if (slr.alreadyRead()) return;
+  if (slr.batchIsFull()) return;
 
   var line = slr.liner.read();
   if (line === null) return;              // EOF
@@ -128,7 +128,7 @@ Reader.prototype.batchIsFull = function() {
   logger.info('batchlimit: ' + this.batch.count);
   var slr = this;
 
-  slr.emit('end', function (err, pause) {
+  slr.emit('end', function (err, delay) {
     slr.bookmark.save(slr.filePath, slr.lines.position, function (err) {
       if (err) {
         logger.error(err);
@@ -136,9 +136,12 @@ Reader.prototype.batchIsFull = function() {
         return;
       }
       slr.batch.count = 0;
-      // the log shipper can ask us to wait 'pause' seconds before
+
+      // the log shipper can ask us to wait 'delay' seconds before
       // emitting the next batch. This is useful as a backoff mechanism.
-      var delay = pause || 5;
+      if (isNaN(delay)) delay = 5;
+      if (!delay) return slr.readLine();
+
       setTimeout(function () {
         console.log('\t\tpause ' + delay + ' seconds');
         slr.readLine();
@@ -225,7 +228,7 @@ Reader.prototype.lineSplitter = function () {
     encoding: this.encoding,   // for archives
   })
   .on('readable', function () { slr.emit('readable'); })
-    .on('end',      function () { slr.endStream();      });
+  .on('end',      function () { slr.endStream();      });
 };
 
 Reader.prototype.resolveAncestor = function (filePath, done) {
@@ -258,7 +261,7 @@ Reader.prototype.watch = function (fileOrDir) {
       existentPath,
       slr.watchOpts,
       slr.watchEvent.bind(slr)
-      );
+    );
   });
 };
 
