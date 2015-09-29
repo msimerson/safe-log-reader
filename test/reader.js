@@ -43,7 +43,6 @@ describe('reader', function () {
     var filePath = path.join(dataDir, 'test.log.1');
 
     reader.createReader(filePath, noBmReadOpts)
-    .on('readable', function () { this.readLine(); })
     .on('read', function (data, lines, bytes) {
       linesSeen++;
       assert.equal(data, logLine);
@@ -56,9 +55,9 @@ describe('reader', function () {
     var filePath = path.join(dataDir, 'batch.log');
     var batchOpts = JSON.parse(JSON.stringify(readerOpts));
     batchOpts.batchLimit = 2;
+    batchOpts.noBookmark = true;
 
     reader.createReader(filePath, batchOpts)
-    .on('readable', function () { this.readLine(); })
     .on('read', function (data, lines, bytes) {
       linesSeen++;
       assert.equal(data, logLine);
@@ -74,7 +73,6 @@ describe('reader', function () {
     var filePath = path.join(dataDir, 'test.log.1');
 
     reader.createReader(filePath, noBmReadOpts)
-    .on('readable', function () { this.readLine(); })
     .on('read', function (data, lines, bytes) {
       linesSeen++;
       assert.equal(lines, linesSeen);
@@ -84,7 +82,6 @@ describe('reader', function () {
 
   it('reads a gzipped file', function (done) {
     reader.createReader(path.join(dataDir, 'test.log.1.gz'), noBmReadOpts)
-    .on('readable', function () { this.readLine(); })
     .on('read', function (data) {
       // console.log(data);
       assert.equal(data, logLine);
@@ -94,7 +91,6 @@ describe('reader', function () {
 
   it.skip('reads a bzip2 compressed file', function (done) {
     reader.createReader(path.join(dataDir, 'test.log.1.bz2'), noBmReadOpts)
-    .on('readable', function () { this.readLine(); })
     .on('read', function (data) {
       // console.log(data);
       assert.equal(data, logLine);
@@ -132,7 +128,6 @@ describe('reader', function () {
       };
 
       reader.createReader(appendFile, readerOpts)
-      .on('readable', function () { this.readLine(); })
       .on('read', function (data, linesRead) {
         // console.log('line: ' + linesRead + ', ' + data);
         if (appendDone) {
@@ -193,7 +188,6 @@ describe('reader', function () {
       newFile(rotateLog, logLine + '\n', function () {
 
         reader.createReader(rotateLog, readerOpts)
-        .on('readable', function () { this.readLine(); })
         .on('read', function (data, lineCount) {
           // console.log(lineCount + '. ' + data);
 
@@ -228,7 +222,6 @@ describe('reader', function () {
       fs.writeFile(rotateLog, logLine + '\n', function () {
 
         reader.createReader(rotateLog, noBmReadOpts)
-        .on('readable', function () { this.readLine(); })
         .on('read', function (data, lineCount) {
           // console.log(lineCount + '. ' + data);
 
@@ -293,7 +286,6 @@ describe('reader', function () {
       };
 
       reader.createReader(missingFile, noBmReadOpts)
-      .on('readable', function () { this.readLine(); })
       .on('read', function (data) {
         assert.equal(data, logLine);
         tryDone();
@@ -355,12 +347,10 @@ describe('reader', function () {
     var filePath = path.join(dataDir, 'test.log');
 
     var r = reader.createReader(filePath, noBmReadOpts)
-    .on('readable', function () {
+    .on('testSetup', function () {
       r.filePath = './non-existent';
       this.batch.limit = 5;
-      this.batch.count = 5;
-      // this.readLine();
-      r.batchIsFull();
+      this.batch.count = 5;  // skip to batchLimit
     })
     .on('read', function (data) {
       assert.equal(data, undefined);
@@ -368,6 +358,44 @@ describe('reader', function () {
     .on('drain', function (cb) {
       cb();
       done();
+    });
+  });
+
+  describe('on a file previously read', function () {
+    it('skips lines confirmed as saved', function (done) {
+
+      var Bookmark = require('../lib/bookmark');
+      var bookmark = new Bookmark(readerOpts.bookmark.dir);
+
+      var data = [];
+      for (var i = 0; i < 10; i++) {
+        data.push('Line number ' + i);
+      };
+      var filePath = path.join(dataDir, 'previous.log');
+      fs.writeFile(filePath, data.join('\n'), function (err) {
+        if (err) return done(err);
+        fs.stat(filePath, function (err, stat) {
+          if (err) return done(err);
+          bookmark.save(filePath, 10, function (err) {
+            fs.appendFile(filePath, '\n' + data.join('\n'), function (err) {
+              if (err) return done(err);
+              var readLines = 0;
+              reader.createReader(filePath, readerOpts)
+              .on('read', function (data) {
+                readLines++;
+                // console.log(data);
+              })
+              .on('drain', function (cb) {
+                cb();
+              })
+              .on('end', function (cb) {
+                assert.equal(readLines, 10);
+                done();
+              });
+            })
+          })
+        });
+      });
     });
   });
 });
