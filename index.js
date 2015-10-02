@@ -215,12 +215,12 @@ Reader.prototype.createStreamGzip = function() {
     .pipe(this.liner);
 };
 /*
-   Reader.prototype.createStreamBz2 = function() {
-   this.isArchive = true;
+Reader.prototype.createStreamBz2 = function() {
+  this.isArchive = true;
 
 // ick. to use in pipe, compressjs has a node-gyp dep. I think I'd
 // rather spawn a child process using CLI bunzip2. TODO
-throw('no bzip2 support yet');
+  throw('no bzip2 support yet');
 };
 */
 Reader.prototype.lineSplitter = function () {
@@ -229,8 +229,14 @@ Reader.prototype.lineSplitter = function () {
   slr.liner = new Splitter({
     encoding: this.encoding,   // for archives
   })
-  .on('readable', function () { slr.emit('readable'); })
-  .on('end',      function () { slr.endStream();      });
+  .on('readable', function () {
+    if (process.env.WANTS_SHUTDOWN) return; // cease reading
+    slr.emit('testSetup');
+    slr.readLine();
+  })
+  .on('end', function () {
+    slr.endStream();
+  });
 };
 
 Reader.prototype.resolveAncestor = function (filePath, done) {
