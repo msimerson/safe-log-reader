@@ -1,6 +1,7 @@
 [![Build Status][ci-img]][ci-url]
 [![Coverage Status][cov-img]][cov-url]
 [![Code Climate][clim-img]][clim-url]
+[![NPM][npm-img]][npm-url]
 
 # Safe Log Reader
 
@@ -114,3 +115,5 @@ the end of a log line.
 [cov-url]: https://coveralls.io/github/DoubleCheck/safe-log-reader
 [clim-img]: https://codeclimate.com/github/DoubleCheck/safe-log-reader/badges/gpa.svg
 [clim-url]: https://codeclimate.com/github/DoubleCheck/safe-log-reader
+[npm-img]: https://nodei.co/npm/safe-log-reader.png
+[npm-url]: https://www.npmjs.com/package/safe-log-reader
