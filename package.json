@@ -19,15 +19,11 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "blanket": "*",
-    "coveralls": "*",
     "grunt": "*",
     "grunt-eslint": "*",
     "grunt-mocha-test": "*",
     "grunt-version-check": "*",
-    "mocha": "*",
-    "mocha-lcov-reporter": "*",
-    "travis-cov": "*"
+    "mocha": "*"
   },
   "config": {
     "blanket": {
@@ -46,9 +42,7 @@
   },
   "license": "BSD-2-Clause",
   "scripts": {
-    "test": "NODE_ENV=test mocha",
-    "coverage": "NODE_ENV=test COVERAGE=1 ./node_modules/.bin/mocha --require blanket --reporter travis-cov",
-    "coveralls": "COVERAGE=1 ./node_modules/.bin/mocha --require blanket --reporter mocha-lcov-reporter | ./node_modules/coveralls/bin/coveralls.js"
+    "test": "NODE_ENV=test mocha"
   },
   "optionalDependencies": {}
 }
