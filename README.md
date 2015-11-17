@@ -1,5 +1,5 @@
 [![Build Status][ci-img]][ci-url]
-[![Coverage Status][cov-img]][cov-url]
+[![Code Coverage][cov-img]][cov-url]
 [![Code Climate][clim-img]][clim-url]
 [![NPM][npm-img]][npm-url]
 
@@ -82,8 +82,7 @@ read.createReader(filePath, {
   reading a file and handling rotation, truncation, and resuming. It had no
   tests so I wrote them and most have been merged. Bugs remain
   (demonstrated with Travis-CI test integration) unresolved. The author
-  offered me a license in exchange for the tests I wrote but I don't want my
-  library infected by the GPL.
+  offered a license in exchange for the tests but the GPL is problematic.
 * [tail-forever](https://github.com/mingqi/tail-forever) has character
   encoding detection and very basic file watching.
 * [always-tail](https://github.com/jandre/always-tail)
@@ -103,7 +102,7 @@ Stream to convert the byte stream into lines. It also makes it dead simple
 to read compressed files by adding a `.pipe(ungzip())` into the stream.
 
 When watching growing log files, S-L-R also uses byte positions. Having read
-to the end of a file, we can know *that* byte position does coincide with
+to the end of a file, we can know *that* byte position coincides with
 the end of a log line.
 
 <sub>Copyright 2015 by eFolder, Inc.</sub>
@@ -111,8 +110,8 @@ the end of a log line.
 
 [ci-img]: https://travis-ci.org/DoubleCheck/safe-log-reader.svg
 [ci-url]: https://travis-ci.org/DoubleCheck/safe-log-reader
-[cov-img]: https://coveralls.io/repos/DoubleCheck/safe-log-reader/badge.svg
-[cov-url]: https://coveralls.io/github/DoubleCheck/safe-log-reader
+[cov-img]: https://codecov.io/github/DoubleCheck/safe-log-reader/badge.svg
+[cov-url]: https://codecov.io/github/DoubleCheck/safe-log-reader
 [clim-img]: https://codeclimate.com/github/DoubleCheck/safe-log-reader/badges/gpa.svg
 [clim-url]: https://codeclimate.com/github/DoubleCheck/safe-log-reader
 [npm-img]: https://nodei.co/npm/safe-log-reader.png
