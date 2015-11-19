@@ -69,8 +69,8 @@ Reader.prototype.endStream = function () {
   slr.sawEndOfFile = true;
 
   var notifyAndWatch = function () {
-    slr.emit('drain', function () {
-      slr.batchSaveDone(arguments);
+    slr.emit('drain', function (err, delay) {
+      slr.batchSaveDone(err, delay);
     });
     slr.emit('end');
     slr.watch(slr.filePath);
@@ -120,8 +120,8 @@ Reader.prototype.batchIsFull = function() {
       ' count: ' + slr.batch.count);
 
   process.nextTick(function () {
-    slr.emit('drain', function () {
-      slr.batchSaveDone(arguments);
+    slr.emit('drain', function (err, delay) {
+      slr.batchSaveDone(err, delay);
     });
   });
   return true;
