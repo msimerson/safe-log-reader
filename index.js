@@ -67,6 +67,7 @@ Reader.prototype.endStream = function () {
     return;
   }
   slr.sawEndOfFile = true;
+  slr.linesAtEndOfFile = slr.lines.position;
 
   var notifyAndWatch = function () {
     slr.emit('drain', function (err, delay) {
@@ -141,9 +142,7 @@ Reader.prototype.batchSaveDone = function (err, delay) {
     // the log shipper can ask us to wait 'delay' seconds before
     // emitting the next batch. This is useful as a backoff mechanism.
     if (isNaN(delay)) delay = slr.batch.delay;
-    if (delay) {
-      console.log('\t\tpause ' + delay + ' seconds');
-    }
+    if (delay) { console.log('\t\tpause ' + delay + ' seconds'); }
 
     setTimeout(function () {
       for (var i=0; i<=slr.batch.limit; i++) {
@@ -159,21 +158,20 @@ Reader.prototype.createStream = function () {
   //     new startup
   //     after EOF, when fs.watch saw a change
   //
-  // with transform streams, files/archives are closed for us
-  // automatically at EOF. Reset the line position upon (re)open.
+  // with transform streams, files/archives are closed automatically
+  // at EOF. Reset the line position upon (re)open.
   this.lines.position = 0;
 
-  // splitters are gone after EOF, always start a new one
+  // splitters are gone after EOF. Start a new one
   this.lineSplitter();
 
   slr.bookmark.read(slr.filePath, function (err, mark) {
     if (err && err.code !== 'ENOENT') {
-      logger.error('Error trying to read bookmark:');
-      logger.error(err.message);
+      logger.error('Error reading bookmark: ' + err.message);
       return;
     }
 
-    if (mark && !slr.noBookmark && mark.lines) {
+    if (mark && mark.lines && !slr.noBookmark) {
       logger.debug('\tlines.start: ' + mark.lines);
       slr.lines.start = mark.lines;
     }
@@ -193,8 +191,12 @@ Reader.prototype.createStream = function () {
       // been emitted as lines.
 
       // the alternative to 'start' here, is splitting the entire file
-      // into lines (again) and counting lines. Avoid that when possible.
+      // into lines (again) and counting lines. Avoid if possible.
       if (slr.sawEndOfFile && mark.size) {
+        if (slr.linesAtEndOfFile !== mark.lines) {
+          logger.error('lines@EOF: ' + slr.linesAtEndOfFile);
+          logger.error('mark.lines: ' + mark.lines);
+        }
         logger.info('\tbytes.start: ' + mark.size);
         fileOpts.start = mark.size;
         slr.sawEndOfFile = false;

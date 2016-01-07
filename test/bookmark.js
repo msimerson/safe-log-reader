@@ -61,3 +61,17 @@ describe('bookmark', function () {
     });
   });
 });
+
+describe('error handling', function () {
+
+  var testFile = path.resolve('./test', 'data', 'write-error.log');
+  it('save emits debugging on stat error', function (done) {
+    this.timeout(4000);
+    process.env.MOCK_STAT_ERROR=true;
+    book.save(testFile, 45, function (err) {
+      process.env.MOCK_STAT_ERROR=false;
+      assert.ok(err);
+      done();
+    });
+  });
+});
