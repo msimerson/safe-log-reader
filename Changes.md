@@ -1,6 +1,8 @@
 
 # 1.0.3 - 2016-07-03
 
+    - in watchRename, don't try to close null watcher
+    - add nodejs 6 testing
     - drop nodejs 0.10 testing
 
 # 1.0.2 - 2016-01-07
