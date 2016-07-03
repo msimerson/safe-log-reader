@@ -302,8 +302,10 @@ Reader.prototype.watchChange = function (filename) {
 
 Reader.prototype.watchRename = function (filename) {
   // logger.info('\trename: ' + filename);
-  this.watcher.close();
-  this.watcher = null;
+  if (this.watcher) {
+    this.watcher.close();
+    this.watcher = null;
+  }
 
   switch (process.platform) {
     case 'darwin':
