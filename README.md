@@ -69,7 +69,7 @@ read.createReader(filePath, {
     - fetches matching docs from ES
     - updates/creates normalized postfix docs
     - saves docs to elasticsearch
-- [ ] log-ship-elastic-qpsmtpd
+- [x] [log-ship-elastic-qpsmtpd](https://github.com/DoubleCheck/log-ship-elastic-qpsmtpd)
     - receives JSON parsed log lines
     - saves to elasticsearch
 - [ ] log-ship-elastic-lighttpd
