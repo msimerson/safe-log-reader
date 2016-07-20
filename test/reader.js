@@ -239,24 +239,26 @@ describe('reader', function () {
               env: {
                 OLD_PATH: rotateLog,
                 NEW_PATH: rotateLog + '.1',
-              } }
+              }
+            }
+          )
+          .on('message', function (msg) {
+            // console.log(msg);
+            isRotated = true;
+            child.fork(
+              path.join('test','helpers','fileAppend.js'),
+              {
+                env: {
+                  FILE_PATH: rotateLog + '.1',
+                  LOG_LINE: logLine + '\n',
+                }
+              }
             )
             .on('message', function (msg) {
               // console.log(msg);
-              isRotated = true;
-              child.fork(
-                path.join('test','helpers','fileAppend.js'),
-                {
-                  env: {
-                    FILE_PATH: rotateLog + '.1',
-                    LOG_LINE: logLine + '\n',
-                  } }
-                )
-            .on('message', function (msg) {
-                // console.log(msg);
-                appendsSeen++;
-              });
+              appendsSeen++;
             });
+          });
         });
       });
     });
@@ -264,8 +266,8 @@ describe('reader', function () {
 
   context('on non-existent file', function () {
 
-    var missingFile = path.join(dataDir, 'missing.log');
-    var irrelevantFile = path.join(dataDir, 'irrelevant.log');
+    var missingFile = path.resolve(dataDir, 'missing.log');
+    var irrelevantFile = path.resolve(dataDir, 'irrelevant.log');
 
     var childOpts  = { env: {
       FILE_PATH: missingFile,
@@ -289,22 +291,24 @@ describe('reader', function () {
 
       reader.createReader(missingFile, noBmReadOpts)
           .on('irrelevantFile', function (filename) {
+            // console.log('irrelevantFile: ' + filename);
             assert.equal(filename, path.basename(irrelevantFile));
             tryDone();
           });
 
       process.nextTick(function () {
         child.fork(
-            path.join('test','helpers','fileAppend.js'),
-            {
-              env: {
-                FILE_PATH: irrelevantFile,
-                LOG_LINE: logLine + '\n',
-              } }
+          path.join('test','helpers','fileAppend.js'),
+          {
+            env: {
+              FILE_PATH: irrelevantFile,
+              LOG_LINE: (logLine + '\n'),
+            }
+          }
         )
         .on('message', function (msg) {
           appendDone = true;
-          //console.log(msg);
+          // console.log('fileAppend message: ' + msg);
         });
       });
     });
@@ -321,6 +325,9 @@ describe('reader', function () {
       .on('read', function (data) {
         assert.equal(data, logLine);
         tryDone();
+      })
+      .on('error', function (err) {
+        console.error('error: ' + err);
       });
 
       process.nextTick(function () {
@@ -330,7 +337,7 @@ describe('reader', function () {
         )
         .on('message', function (msg) {
           appendDone = true;
-          // console.log(msg);
+          // console.log('fileAppend message: ' + msg);
         });
       });
     });
@@ -409,7 +416,7 @@ describe('reader', function () {
       var data = [];
       for (var i = 0; i < 10; i++) {
         data.push('Line number ' + i);
-      };
+      }
       var filePath = path.join(dataDir, 'previous.log');
       fs.writeFile(filePath, data.join('\n'), function (err) {
         if (err) return done(err);
@@ -431,8 +438,8 @@ describe('reader', function () {
                 assert.equal(readLines, 10);
                 done();
               });
-            })
-          })
+            });
+          });
         });
       });
     });

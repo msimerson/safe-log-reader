@@ -51,7 +51,8 @@ Reader.prototype.startReader = function() {
         logger.info('watching for ' + slr.filePath + ' to appear');
         return slr.watch(slr.filePath);
       }
-      return logger.error(err);
+      logger.error(err);
+      return;
     }
 
     slr.createStream();  // a Transform stream
@@ -287,7 +288,7 @@ Reader.prototype.watchEvent = function (event, filename) {
 
   if (this.isWatchingParent) {
     // make sure event filename matches
-    if (filename !== path.basename(this.filePath)){
+    if (filename !== path.basename(this.filePath)) {
       this.emit('irrelevantFile', filename);
       return;
     }
@@ -370,7 +371,7 @@ Reader.prototype.renameMacOS = function (filename) {
   slr.lines.start = 0;
 
   // log file just (re)appeared
-  if (filename === path.basename(slr.filePath)) {
+  if (filename === slr.filePath) {
     setTimeout(function () {
       slr.createStream();
     }, slr.watchDelay);
