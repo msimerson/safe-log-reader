@@ -288,7 +288,7 @@ Reader.prototype.watchEvent = function (event, filename) {
 
   if (this.isWatchingParent) {
     // make sure event filename matches
-    if (filename !== path.basename(this.filePath)){
+    if (filename !== path.basename(this.filePath)) {
       this.emit('irrelevantFile', filename);
       return;
     }

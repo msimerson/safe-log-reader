@@ -239,24 +239,26 @@ describe('reader', function () {
               env: {
                 OLD_PATH: rotateLog,
                 NEW_PATH: rotateLog + '.1',
-              } }
+              }
+            }
+          )
+          .on('message', function (msg) {
+            // console.log(msg);
+            isRotated = true;
+            child.fork(
+              path.join('test','helpers','fileAppend.js'),
+              {
+                env: {
+                  FILE_PATH: rotateLog + '.1',
+                  LOG_LINE: logLine + '\n',
+                }
+              }
             )
             .on('message', function (msg) {
               // console.log(msg);
-              isRotated = true;
-              child.fork(
-                path.join('test','helpers','fileAppend.js'),
-                {
-                  env: {
-                    FILE_PATH: rotateLog + '.1',
-                    LOG_LINE: logLine + '\n',
-                  } }
-                )
-            .on('message', function (msg) {
-                // console.log(msg);
-                appendsSeen++;
-              });
+              appendsSeen++;
             });
+          });
         });
       });
     });
@@ -296,12 +298,13 @@ describe('reader', function () {
 
       process.nextTick(function () {
         child.fork(
-            path.join('test','helpers','fileAppend.js'),
-            {
-              env: {
-                FILE_PATH: irrelevantFile,
-                LOG_LINE: (logLine + '\n'),
-              } }
+          path.join('test','helpers','fileAppend.js'),
+          {
+            env: {
+              FILE_PATH: irrelevantFile,
+              LOG_LINE: (logLine + '\n'),
+            }
+          }
         )
         .on('message', function (msg) {
           appendDone = true;
@@ -413,7 +416,7 @@ describe('reader', function () {
       var data = [];
       for (var i = 0; i < 10; i++) {
         data.push('Line number ' + i);
-      };
+      }
       var filePath = path.join(dataDir, 'previous.log');
       fs.writeFile(filePath, data.join('\n'), function (err) {
         if (err) return done(err);
@@ -435,8 +438,8 @@ describe('reader', function () {
                 assert.equal(readLines, 10);
                 done();
               });
-            })
-          })
+            });
+          });
         });
       });
     });
