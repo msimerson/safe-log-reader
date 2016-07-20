@@ -264,8 +264,8 @@ describe('reader', function () {
 
   context('on non-existent file', function () {
 
-    var missingFile = path.join(dataDir, 'missing.log');
-    var irrelevantFile = path.join(dataDir, 'irrelevant.log');
+    var missingFile = path.resolve(dataDir, 'missing.log');
+    var irrelevantFile = path.resolve(dataDir, 'irrelevant.log');
 
     var childOpts  = { env: {
       FILE_PATH: missingFile,
@@ -289,6 +289,7 @@ describe('reader', function () {
 
       reader.createReader(missingFile, noBmReadOpts)
           .on('irrelevantFile', function (filename) {
+            // console.log('irrelevantFile: ' + filename);
             assert.equal(filename, path.basename(irrelevantFile));
             tryDone();
           });
@@ -299,12 +300,12 @@ describe('reader', function () {
             {
               env: {
                 FILE_PATH: irrelevantFile,
-                LOG_LINE: logLine + '\n',
+                LOG_LINE: (logLine + '\n'),
               } }
         )
         .on('message', function (msg) {
           appendDone = true;
-          //console.log(msg);
+          // console.log('fileAppend message: ' + msg);
         });
       });
     });
@@ -321,6 +322,9 @@ describe('reader', function () {
       .on('read', function (data) {
         assert.equal(data, logLine);
         tryDone();
+      })
+      .on('error', function (err) {
+        console.error('error: ' + err);
       });
 
       process.nextTick(function () {
@@ -330,7 +334,7 @@ describe('reader', function () {
         )
         .on('message', function (msg) {
           appendDone = true;
-          // console.log(msg);
+          // console.log('fileAppend message: ' + msg);
         });
       });
     });
