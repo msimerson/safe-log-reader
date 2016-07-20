@@ -265,6 +265,8 @@ describe('reader', function () {
   context('on non-existent file', function () {
 
     var missingFile = path.join(dataDir, 'missing.log');
+    var irrelevantFile = path.join(dataDir, 'irrelevant.log');
+
     var childOpts  = { env: {
       FILE_PATH: missingFile,
       LOG_LINE: (logLine + '\n'),
@@ -274,6 +276,36 @@ describe('reader', function () {
       fs.unlink(missingFile, function (err) {
         // might not exist, ignore err
         done();
+      });
+    });
+
+    it('ignores irrelevant files', function (done) {
+
+      var appendDone = false;
+      var tryDone = function () {
+        if (appendDone) return done();
+        setTimeout(function () { tryDone(); }, 10);
+      };
+
+      reader.createReader(missingFile, noBmReadOpts)
+          .on('irrelevantFile', function (filename) {
+            assert.equal(filename, path.basename(irrelevantFile));
+            tryDone();
+          });
+
+      process.nextTick(function () {
+        child.fork(
+            path.join('test','helpers','fileAppend.js'),
+            {
+              env: {
+                FILE_PATH: irrelevantFile,
+                LOG_LINE: logLine + '\n',
+              } }
+        )
+        .on('message', function (msg) {
+          appendDone = true;
+          //console.log(msg);
+        });
       });
     });
 
@@ -302,6 +334,13 @@ describe('reader', function () {
         });
       });
     });
+
+    after(function (done) {
+      fs.truncate(irrelevantFile, function (err) {
+        done();
+      });
+    });
+
   });
 
   describe('unreadable file', function () {

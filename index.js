@@ -267,6 +267,9 @@ Reader.prototype.watch = function (fileOrDir) {
     if (err) return logger.error(err);
 
     logger.info('watching ' + existentPath);
+
+    slr.isWatchingParent = existentPath === fileOrDir ? false : true;
+
     slr.watcher = fs.watch(
       existentPath,
       slr.watchOpts,
@@ -277,6 +280,15 @@ Reader.prototype.watch = function (fileOrDir) {
 
 Reader.prototype.watchEvent = function (event, filename) {
   logger.debug('watcher saw ' + event + ' on ' + filename);
+
+  if (this.isWatchingParent) {
+    // make sure event filename matches
+    if (filename !== path.basename(this.filePath)){
+      this.emit('irrelevantFile', filename);
+      return;
+    }
+  }
+
   switch (event) {
     case 'change':
       this.watchChange(filename);
@@ -332,8 +344,8 @@ Reader.prototype.renameLinux = function (filename) {
     if (err) {
       if (err.code === 'ENOENT') {  // mv or rm
         slr.lines.start = 0;
-        // watch parent dir for file to reappear
-        slr.watch(path.dirname(slr.filePath));
+        // watch for file to reappear
+        slr.watch(slr.filePath);
         return;
       }
       logger.error(err);
@@ -359,8 +371,8 @@ Reader.prototype.renameMacOS = function (filename) {
     return;
   }
 
-  // log file moved away (likely: foo.log -> foo.log.1)
-  slr.watch(path.dirname(slr.filePath));
+  // slr.watch handles case when file does not exist
+  slr.watch(slr.filePath);
 };
 
 module.exports = {
