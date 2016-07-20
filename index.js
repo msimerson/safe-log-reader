@@ -243,6 +243,10 @@ Reader.prototype.lineSplitter = function () {
 
 Reader.prototype.resolveAncestor = function (filePath, done) {
   var slr = this;
+
+  // fs apex, break recursion
+  if (filePath === '/') return done(null, filePath);
+
   // walk up a directory tree until an existing one is found
   fs.stat(filePath, function (err, stat) {
     if (err) {
@@ -301,8 +305,9 @@ Reader.prototype.watchEvent = function (event, filename) {
 
 Reader.prototype.watchChange = function (filename) {
   var slr = this;
-  // we can get multiple of these in rapid succession.
-  // ignore subsequent...
+
+  // Depending on underlying OS semantics, we can get multiple of these
+  // events in rapid succession. ignore subsequent.
   if (!slr.watcher) return;
 
   slr.watcher.close();
@@ -314,6 +319,7 @@ Reader.prototype.watchChange = function (filename) {
 
 Reader.prototype.watchRename = function (filename) {
   // logger.info('\trename: ' + filename);
+
   if (this.watcher) {
     this.watcher.close();
     this.watcher = null;
