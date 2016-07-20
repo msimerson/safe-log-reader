@@ -1,4 +1,9 @@
 
+# 1.0.4 - 2016-07-20
+
+    - ignore file watch notifications for other files in same dir (#13)
+    - avoid infinite recursion if file path has no / characters
+
 # 1.0.3 - 2016-07-03
 
     - in watchRename, don't try to close null watcher

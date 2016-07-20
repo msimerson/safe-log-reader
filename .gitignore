@@ -5,3 +5,4 @@ test/data/append.log*
 test/data/rotate*
 test/.bookmarks/*
 test/data/missing.log
+test/data/previous.log
