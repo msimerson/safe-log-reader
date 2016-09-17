@@ -88,7 +88,10 @@ Reader.prototype.readLine = function () {
   if (slr.batchIsFull()) return;
 
   var line = slr.liner.read();
-  if (line === null) return;              // EOF
+  if (line === null) {                // EOF
+    slr.bytesAtEndOfFile = slr.liner.bytes;
+    return;
+  }
 
   slr.batch.count++;
   slr.lines.position++;
@@ -131,7 +134,16 @@ Reader.prototype.batchIsFull = function() {
 
 Reader.prototype.batchSaveDone = function (err, delay) {
   var slr = this;
-  slr.bookmark.save(slr.filePath, slr.lines.position, function (err) {
+
+  var saveArgs = {
+    file:  slr.filePath,
+    lines: slr.lines.position
+  };
+  if (slr.sawEndOfFile) {
+    saveArgs.bytes = slr.bytesAtEndOfFile;
+  };
+
+  slr.bookmark.save(saveArgs, function (err) {
     if (err) {
       logger.error(err);
       logger.error('bookmark save failed, halting');
