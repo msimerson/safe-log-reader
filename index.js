@@ -198,8 +198,8 @@ Reader.prototype.createStream = function () {
           logger.error('lines@EOF: ' + slr.linesAtEndOfFile);
           logger.error('mark.lines: ' + mark.lines);
         }
-        logger.info('\tbytes.start: ' + mark.size);
-        fileOpts.start = mark.size;
+        // logger.info('\tbytes.start: ' + mark.size);
+        // fileOpts.start = mark.size;
         slr.sawEndOfFile = false;
         slr.lines.position = mark.lines;
       }
