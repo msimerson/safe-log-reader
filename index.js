@@ -7,6 +7,7 @@ var fs        = require('fs');
 var path      = require('path');
 var util      = require('util');
 var zlib      = require('zlib');
+var EOL       = require('os').EOL;
 
 var logger    = require('./lib/logger');
 var Bookmark  = require('./lib/bookmark');
@@ -31,6 +32,7 @@ function Reader (fileOrPath, options) {
   if (options.watchDelay) this.watchDelay = options.watchDelay * 1000;
 
   this.lines        = { start: 0, position: 0, skip: 0 };
+  this.bytesOffset  = 0;
   this.batch        = { count: 0, limit: 0, delay: 0 };
 
   if (options.batchLimit) this.batch.limit = options.batchLimit;
@@ -89,12 +91,12 @@ Reader.prototype.readLine = function () {
 
   var line = slr.liner.read();
   if (line === null) {                // EOF
-    slr.bytesAtEndOfFile = slr.liner.bytes;
     return;
   }
 
   slr.batch.count++;
   slr.lines.position++;
+  if (line) slr.bytesOffset += (line.length + EOL.length);
   slr.emit('read', line, slr.lines.position);
 };
 
@@ -103,7 +105,8 @@ Reader.prototype.alreadyRead = function() {
 
   if (slr.lines.start && slr.lines.position < slr.lines.start) {
     slr.lines.skip++;
-    slr.liner.read();
+    var line = slr.liner.read();
+    if (line) slr.bytesOffset += (line.length + EOL.length);
     slr.lines.position++;
     return true;
   }
@@ -137,10 +140,8 @@ Reader.prototype.batchSaveDone = function (err, delay) {
 
   var saveArgs = {
     file:  slr.filePath,
-    lines: slr.lines.position
-  };
-  if (slr.sawEndOfFile) {
-    saveArgs.bytes = slr.bytesAtEndOfFile;
+    lines: slr.lines.position,
+    bytes: slr.bytesOffset,
   };
 
   slr.bookmark.save(saveArgs, function (err) {
@@ -174,6 +175,7 @@ Reader.prototype.createStream = function () {
   // with transform streams, files/archives are closed automatically
   // at EOF. Reset the line position upon (re)open.
   this.lines.position = 0;
+  this.bytesOffset = 0;
 
   // splitters are gone after EOF. Start a new one
   this.lineSplitter();
@@ -210,10 +212,11 @@ Reader.prototype.createStream = function () {
           logger.error('lines@EOF: ' + slr.linesAtEndOfFile);
           logger.error('mark.lines: ' + mark.lines);
         }
-        logger.info('\tbytes.start: ' + mark.size);
-        fileOpts.start = mark.size;
+        logger.info('\tbytes.start (mark.size): ' + mark.size);
+        // fileOpts.start = mark.size;
         slr.sawEndOfFile = false;
         slr.lines.position = mark.lines;
+        slr.bytesOffset = mark.size;
       }
     }
 

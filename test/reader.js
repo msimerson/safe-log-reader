@@ -159,6 +159,7 @@ describe('reader', function () {
 
   context('after file rotation', function () {
 
+    this.timeout(3000);
     it('reads lines appended to new file rotate.log', function (done) {
       var renameCalled = false;
 

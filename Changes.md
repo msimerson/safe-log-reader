@@ -1,4 +1,8 @@
 
+# 1.0.5 - 2016-10-19
+
+    - correct a race condition in bookmark saving (#17)
+
 # 1.0.4 - 2016-07-20
 
     - ignore file watch notifications for other files in same dir (#13)
