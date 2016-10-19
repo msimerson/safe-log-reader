@@ -422,7 +422,7 @@ describe('reader', function () {
         if (err) return done(err);
         fs.stat(filePath, function (err, stat) {
           if (err) return done(err);
-          bookmark.save(filePath, 10, function (err) {
+          bookmark.save({file: filePath, lines: 10}, function (err) {
             fs.appendFile(filePath, '\n' + data.join('\n'), function (err) {
               if (err) return done(err);
               var readLines = 0;

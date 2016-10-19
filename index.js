@@ -7,6 +7,7 @@ var fs        = require('fs');
 var path      = require('path');
 var util      = require('util');
 var zlib      = require('zlib');
+var EOL       = require('os').EOL;
 
 var logger    = require('./lib/logger');
 var Bookmark  = require('./lib/bookmark');
@@ -31,6 +32,7 @@ function Reader (fileOrPath, options) {
   if (options.watchDelay) this.watchDelay = options.watchDelay * 1000;
 
   this.lines        = { start: 0, position: 0, skip: 0 };
+  this.bytesOffset  = 0;
   this.batch        = { count: 0, limit: 0, delay: 0 };
 
   if (options.batchLimit) this.batch.limit = options.batchLimit;
@@ -88,10 +90,13 @@ Reader.prototype.readLine = function () {
   if (slr.batchIsFull()) return;
 
   var line = slr.liner.read();
-  if (line === null) return;              // EOF
+  if (line === null) {                // EOF
+    return;
+  }
 
   slr.batch.count++;
   slr.lines.position++;
+  if (line) slr.bytesOffset += (line.length + EOL.length);
   slr.emit('read', line, slr.lines.position);
 };
 
@@ -100,7 +105,8 @@ Reader.prototype.alreadyRead = function() {
 
   if (slr.lines.start && slr.lines.position < slr.lines.start) {
     slr.lines.skip++;
-    slr.liner.read();
+    var line = slr.liner.read();
+    if (line) slr.bytesOffset += (line.length + EOL.length);
     slr.lines.position++;
     return true;
   }
@@ -131,7 +137,14 @@ Reader.prototype.batchIsFull = function() {
 
 Reader.prototype.batchSaveDone = function (err, delay) {
   var slr = this;
-  slr.bookmark.save(slr.filePath, slr.lines.position, function (err) {
+
+  var saveArgs = {
+    file:  slr.filePath,
+    lines: slr.lines.position,
+    bytes: slr.bytesOffset,
+  };
+
+  slr.bookmark.save(saveArgs, function (err) {
     if (err) {
       logger.error(err);
       logger.error('bookmark save failed, halting');
@@ -162,6 +175,7 @@ Reader.prototype.createStream = function () {
   // with transform streams, files/archives are closed automatically
   // at EOF. Reset the line position upon (re)open.
   this.lines.position = 0;
+  this.bytesOffset = 0;
 
   // splitters are gone after EOF. Start a new one
   this.lineSplitter();
@@ -199,9 +213,9 @@ Reader.prototype.createStream = function () {
           logger.error('mark.lines: ' + mark.lines);
         }
         logger.info('\tbytes.start: ' + mark.size);
-        fileOpts.start = mark.size;
         slr.sawEndOfFile = false;
         slr.lines.position = mark.lines;
+        slr.bytesOffset = mark.size;
       }
     }
 
@@ -371,7 +385,7 @@ Reader.prototype.renameMacOS = function (filename) {
   slr.lines.start = 0;
 
   // log file just (re)appeared
-  if (filename === slr.filePath) {
+  if (filename === path.basename(slr.filePath)) {
     setTimeout(function () {
       slr.createStream();
     }, slr.watchDelay);
