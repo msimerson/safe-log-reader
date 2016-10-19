@@ -159,6 +159,7 @@ describe('reader', function () {
 
   context('after file rotation', function () {
 
+    this.timeout(3000);
     it('reads lines appended to new file rotate.log', function (done) {
       var renameCalled = false;
 
@@ -422,7 +423,7 @@ describe('reader', function () {
         if (err) return done(err);
         fs.stat(filePath, function (err, stat) {
           if (err) return done(err);
-          bookmark.save({file: filePath, lines: 10}, function (err) {
+          bookmark.save({ file: filePath, lines: 10 }, function (err) {
             fs.appendFile(filePath, '\n' + data.join('\n'), function (err) {
               if (err) return done(err);
               var readLines = 0;

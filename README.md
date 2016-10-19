@@ -5,7 +5,7 @@
 
 # Safe Log Reader
 
-Read plain or compressed log files from disk, deliver as [batches of] lines to a log consumer. Wait for the log consumer to report success. Repeat ad infinitum.
+Read plain or compressed log files from disk, deliver as [batches of] lines to a log consumer. Wait for the log consumer to report success. Advance bookmark. Repeat ad infinitum.
 
 # Install
 
@@ -89,21 +89,24 @@ read.createReader(filePath, {
 
 The key "missing" feature of the node "tail" libraries is the ability to
 resume correctly after the app has stopped reading (think: kill -9)
-in the middle of a file. Because files are read as bytes, and log
-entries are processed as lines, resuming at the last byte position is likely
-to be in the middle of a line, or even splitting a multi-byte character.
-There's no way to correlate a line with its byte position. Further, the
-extra buffered bytes not yet emitted as lines are lost, unless at restart,
-one rewinds and replays the last full $bufferSize.
+in the middle of a file.
 
-The key to resuming reading a log file "safely" is to track line numbers.
-Rather than reading in chunks of bytes, safe-log-reader uses a Transform
-Stream to convert the byte stream into lines. It also makes it dead simple
-to read compressed files by adding a `.pipe(ungzip())` into the stream.
+Because files are read as [chunks of] bytes and log entries are lines,
+resuming at the files last byte position is likely to be in the middle of a
+line, or even splitting a multi-byte character. Extra buffered bytes not yet
+emitted as lines are lost, unless at restart, one rewinds and replays the
+last full $bufferSize. Then the consuming app needs to have duplicate line
+detection and suppression.
 
-When watching growing log files, S-L-R also uses byte positions. Having read
-to the end of a file, we can know *that* byte position coincides with
-the end of a log line.
+The key to resuming reading a log file _safely_ is tracking line numbers and
+the byte steam offset the consuming app has committed. When saving bookmarks,
+the file position advances to the byte offset coinciding with the byte
+position of the last line your application has safely commited.
+
+Safe-log-reader uses a Transform Stream to convert the byte stream into
+lines. This makes it dead simple to read compressed files by adding
+a `.pipe(ungzip())` into the stream.
+
 
 <sub>Copyright 2015 by eFolder, Inc.</sub>
 

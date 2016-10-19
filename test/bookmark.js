@@ -25,7 +25,7 @@ describe('bookmark', function () {
   });
 
   it('saves a bookmark', function (done) {
-    book.save({file: testFile, lines: 45}, function (err) {
+    book.save({ file: testFile, lines: 45 }, function (err) {
       assert.ifError(err);
       done();
     });
@@ -68,7 +68,7 @@ describe('error handling', function () {
   it('save emits debugging on stat error', function (done) {
     this.timeout(4000);
     process.env.MOCK_STAT_ERROR=true;
-    book.save({file: testFile, lines: 45}, function (err) {
+    book.save({ file: testFile, lines: 45 }, function (err) {
       process.env.MOCK_STAT_ERROR=false;
       assert.ok(err);
       done();
