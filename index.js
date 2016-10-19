@@ -212,8 +212,7 @@ Reader.prototype.createStream = function () {
           logger.error('lines@EOF: ' + slr.linesAtEndOfFile);
           logger.error('mark.lines: ' + mark.lines);
         }
-        logger.info('\tbytes.start (mark.size): ' + mark.size);
-        // fileOpts.start = mark.size;
+        logger.info('\tbytes.start: ' + mark.size);
         slr.sawEndOfFile = false;
         slr.lines.position = mark.lines;
         slr.bytesOffset = mark.size;
@@ -386,7 +385,7 @@ Reader.prototype.renameMacOS = function (filename) {
   slr.lines.start = 0;
 
   // log file just (re)appeared
-  if (filename === slr.filePath) {
+  if (filename === path.basename(slr.filePath)) {
     setTimeout(function () {
       slr.createStream();
     }, slr.watchDelay);
