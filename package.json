@@ -1,7 +1,7 @@
 {
   "name": "safe-log-reader",
   "description": "Safe Log Reader",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "private": false,
   "keywords": [
     "log",
@@ -20,6 +20,7 @@
   "dependencies": {},
   "devDependencies": {
     "grunt": "*",
+    "grunt-contrib-clean": "*",
     "grunt-eslint": "*",
     "grunt-mocha-test": "*",
     "grunt-version-check": "*",
@@ -29,7 +30,9 @@
   },
   "license": "BSD-2-Clause",
   "scripts": {
-    "test": "NODE_ENV=test mocha"
+    "test": "NODE_ENV=test mocha",
+    "lint": "./node_modules/.bin/grunt lint",
+    "coverage": "NODE_ENV=cov ./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- -R spec"
   },
   "optionalDependencies": {}
 }

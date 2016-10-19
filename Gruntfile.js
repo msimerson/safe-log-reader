@@ -2,6 +2,7 @@
 
 module.exports = function(grunt) {
 
+  grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-eslint');
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-version-check');
@@ -14,7 +15,7 @@ module.exports = function(grunt) {
         src: ['Gruntfile.js','index.js','lib/**/*.js']
       },
       test: {
-        src: ['test/**/*.js'],
+        src: ['test/*.js', 'test/helpers/*.js'],
       }
     },
     mochaTest: {
@@ -27,6 +28,7 @@ module.exports = function(grunt) {
     clean: {
       modules: ['node_modules'],
       build:   ['npm-debug.log'],
+      cover:   ['coverage'],
       editor:  ['./**/*~', './**/*.swp'],
       dist:    ['<%= clean.editor %>',
                 '<%= clean.modules %>',
@@ -34,11 +36,13 @@ module.exports = function(grunt) {
       ],
     },
     versioncheck: {
-      options: {
-        skip : ['semver', 'npm', 'lodash'],
-        hideUpToDate : false
-      }
-    },
+      target: {
+        options: {
+          skip : ['semver', 'npm', 'lodash'],
+          hideUpToDate : false
+        }
+      },
+    }
   });
 
   grunt.registerTask('lint',    ['eslint']);
