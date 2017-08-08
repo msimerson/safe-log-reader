@@ -63,13 +63,13 @@ read.createReader(filePath, {
 
 # Shippers
 
-- [x] [log-ship-elastic-postfix](https://github.com/DoubleCheck/log-ship-elastic-postfix)
+- [x] [log-ship-elastic-postfix](https://github.com/msimerson/log-ship-elastic-postfix)
     - reads batches of log entries
-    - parses with [postfix-parser](https://github.com/DoubleCheck/postfix-parser)
+    - parses with [postfix-parser](https://github.com/msimerson/postfix-parser)
     - fetches matching docs from ES
     - updates/creates normalized postfix docs
     - saves docs to elasticsearch
-- [x] [log-ship-elastic-qpsmtpd](https://github.com/DoubleCheck/log-ship-elastic-qpsmtpd)
+- [x] [log-ship-elastic-qpsmtpd](https://github.com/msimerson/log-ship-elastic-qpsmtpd)
     - receives JSON parsed log lines
     - saves to elasticsearch
 - [ ] log-ship-elastic-lighttpd
@@ -111,11 +111,11 @@ a `.pipe(ungzip())` into the stream.
 <sub>Copyright 2015 by eFolder, Inc.</sub>
 
 
-[ci-img]: https://travis-ci.org/DoubleCheck/safe-log-reader.svg
-[ci-url]: https://travis-ci.org/DoubleCheck/safe-log-reader
-[cov-img]: https://codecov.io/github/DoubleCheck/safe-log-reader/badge.svg
-[cov-url]: https://codecov.io/github/DoubleCheck/safe-log-reader
-[clim-img]: https://codeclimate.com/github/DoubleCheck/safe-log-reader/badges/gpa.svg
-[clim-url]: https://codeclimate.com/github/DoubleCheck/safe-log-reader
+[ci-img]: https://travis-ci.org/msimerson/safe-log-reader.svg
+[ci-url]: https://travis-ci.org/msimerson/safe-log-reader
+[cov-img]: https://codecov.io/github/msimerson/safe-log-reader/badge.svg
+[cov-url]: https://codecov.io/github/msimerson/safe-log-reader
+[clim-img]: https://codeclimate.com/github/msimerson/safe-log-reader/badges/gpa.svg
+[clim-url]: https://codeclimate.com/github/msimerson/safe-log-reader
 [npm-img]: https://nodei.co/npm/safe-log-reader.png
 [npm-url]: https://www.npmjs.com/package/safe-log-reader

@@ -1,7 +1,7 @@
 {
   "name": "safe-log-reader",
   "description": "Safe Log Reader",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "private": false,
   "keywords": [
     "log",
@@ -9,29 +9,24 @@
     "tail",
     "watch"
   ],
-  "homepage": "https://github.com/DoubleCheck/safe-log-reader",
+  "homepage": "https://github.com/msimerson/safe-log-reader",
   "bugs": {
-    "url": "https://github.com/DoubleCheck/safe-log-reader/issues"
+    "url": "https://github.com/msimerson/safe-log-reader/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/DoubleCheck/safe-log-reader.git"
+    "url": "git://github.com/msimerson/safe-log-reader.git"
   },
   "dependencies": {},
   "devDependencies": {
-    "grunt": "*",
-    "grunt-contrib-clean": "*",
-    "grunt-eslint": "*",
-    "grunt-mocha-test": "*",
-    "grunt-version-check": "*",
+    "eslint": "*",
     "mocha": "*"
   },
-  "config": {
-  },
+  "config": {},
   "license": "BSD-2-Clause",
   "scripts": {
     "test": "NODE_ENV=test mocha",
-    "lint": "./node_modules/.bin/grunt lint",
+    "lint": "./node_modules/.bin/eslint *.js test/*.js",
     "coverage": "NODE_ENV=cov ./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- -R spec"
   },
   "optionalDependencies": {}

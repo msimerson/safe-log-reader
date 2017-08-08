@@ -156,7 +156,7 @@ Reader.prototype.batchSaveDone = function (err, delay) {
     // the log shipper can ask us to wait 'delay' seconds before
     // emitting the next batch. This is useful as a backoff mechanism.
     if (isNaN(delay)) delay = slr.batch.delay;
-    if (delay) { console.log('\t\tpause ' + delay + ' seconds'); }
+    if (delay) console.log('\t\tpause ' + delay + ' seconds');
 
     setTimeout(function () {
       for (var i=0; i<=slr.batch.limit; i++) {
@@ -246,14 +246,14 @@ Reader.prototype.lineSplitter = function () {
   slr.liner = new Splitter({
     encoding: this.encoding,   // for archives
   })
-  .on('readable', function () {
-    if (process.env.WANTS_SHUTDOWN) return; // cease reading
-    slr.emit('testSetup');
-    slr.readLine();
-  })
-  .on('end', function () {
-    slr.endStream();
-  });
+    .on('readable', function () {
+      if (process.env.WANTS_SHUTDOWN) return; // cease reading
+      slr.emit('testSetup');
+      slr.readLine();
+    })
+    .on('end', function () {
+      slr.endStream();
+    });
 };
 
 Reader.prototype.resolveAncestor = function (filePath, done) {
@@ -351,8 +351,8 @@ Reader.prototype.watchRename = function (filename) {
     default:
       // falls through
       logger.error('report this as GitHub Issue:\n' +
-          '\trename: ' + filename + ' on ' + process.platform
-          );
+        '\trename: ' + filename + ' on ' + process.platform
+      );
   }
 };
 
