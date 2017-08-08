@@ -1,7 +1,7 @@
 {
   "name": "safe-log-reader",
   "description": "Safe Log Reader",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "private": false,
   "keywords": [
     "log",
@@ -9,13 +9,13 @@
     "tail",
     "watch"
   ],
-  "homepage": "https://github.com/DoubleCheck/safe-log-reader",
+  "homepage": "https://github.com/msimerson/safe-log-reader",
   "bugs": {
-    "url": "https://github.com/DoubleCheck/safe-log-reader/issues"
+    "url": "https://github.com/msimerson/safe-log-reader/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/DoubleCheck/safe-log-reader.git"
+    "url": "git://github.com/msimerson/safe-log-reader.git"
   },
   "dependencies": {},
   "devDependencies": {
