@@ -1,4 +1,8 @@
 
+## 1.0.8 - 2017-08-22
+
+- Fix and test the bookmark bytes #24 by @TidamCo
+
 ## 1.0.7 - 2017-08-08
 
 - update URL to CI tests
