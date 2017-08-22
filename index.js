@@ -213,6 +213,7 @@ Reader.prototype.createStream = function () {
           logger.error('mark.lines: ' + mark.lines);
         }
         logger.info('\tbytes.start: ' + mark.size);
+        fileOpts.start = mark.size;
         slr.sawEndOfFile = false;
         slr.lines.position = mark.lines;
         slr.bytesOffset = mark.size;

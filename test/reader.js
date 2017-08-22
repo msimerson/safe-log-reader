@@ -4,6 +4,7 @@ var assert  = require('assert');
 var child   = require('child_process');
 var fs      = require('fs');
 var path    = require('path');
+var EOL       = require('os').EOL;
 
 var readerOpts = {
   bookmark: { dir: path.resolve('test', '.bookmarks') },
@@ -436,6 +437,47 @@ describe('reader', function () {
                   assert.equal(readLines, 10);
                   done();
                 });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  describe('on a file previously read using bytes', function () {
+    it('skips bytes confirmed as saved', function (done) {
+
+      var Bookmark = require('../lib/bookmark');
+      var bookmark = new Bookmark(readerOpts.bookmark.dir);
+
+      var data = [];
+      for (var i = 0; i < 10; i++) {
+        data.push('Line number ' + i);
+      }
+      var filePath = path.join(dataDir, 'previous.log');
+      fs.writeFile(filePath, data.join('\n'), function (err) {
+        if (err) return done(err);
+        fs.stat(filePath, function (err, stat) {
+          if (err) return done(err);
+          // bytes is size of file + EOL
+          bookmark.save({ file: filePath, lines: 10, bytes: stat.size + EOL.length }, function (err) {
+            fs.appendFile(filePath, '\n' + data.join('\n'), function (err) {
+              if (err) return done(err);
+              var readLines = 0;
+              var instance = reader.createReader(filePath, readerOpts)
+                .on('read', function (data) {
+                  readLines++;
+                  // console.log(data);
+                })
+                .on('drain', function (cb) {
+                  cb();
+                })
+                .on('end', function (cb) {
+                  assert.equal(readLines, 10);
+                  done();
+                });
+              // required otherwise bytes wont be used
+              instance.sawEndOfFile = true;
             });
           });
         });
