@@ -25,9 +25,9 @@
   "config": {},
   "license": "BSD-2-Clause",
   "scripts": {
-    "test": "NODE_ENV=test mocha",
+    "test": "NODE_ENV=test node node_modules/.bin/_mocha --exit",
     "lint": "./node_modules/.bin/eslint *.js test/*.js",
-    "coverage": "NODE_ENV=cov ./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- -R spec"
+    "coverage": "NODE_ENV=cov ./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- -R spec --exit"
   },
   "optionalDependencies": {}
 }

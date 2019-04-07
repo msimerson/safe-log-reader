@@ -20,6 +20,7 @@ function Reader (fileOrPath, options) {
   this.filePath     = path.resolve(fileOrPath);
   this.isArchive    = false;
   this.sawEndOfFile = false;
+  this.canUseBookmarkBytes = false;
   this.startBytes   = 0;
   this.watchDelay   = process.env.NODE_ENV === 'test' ? 100 : 2000;
 
@@ -31,17 +32,22 @@ function Reader (fileOrPath, options) {
       path.resolve('./', '.bookmark'));
   if (options.watchDelay) this.watchDelay = options.watchDelay * 1000;
 
-  this.lines        = { start: 0, position: 0, skip: 0 };
-  this.bytesOffset  = 0;
   this.batch        = { count: 0, limit: 0, delay: 0 };
 
   if (options.batchLimit) this.batch.limit = options.batchLimit;
   if (options.batchDelay) this.batch.delay = options.batchDelay;
 
+  this.resetPosition();
+
   this.startReader();
 }
 
 util.inherits(Reader, events.EventEmitter);
+
+Reader.prototype.resetPosition = function() {
+  this.lines = { start: 0, position: 0, skip: 0 };
+  this.bytesOffset  = 0;
+};
 
 Reader.prototype.startReader = function() {
   var slr = this;
@@ -70,6 +76,7 @@ Reader.prototype.endStream = function () {
     return;
   }
   slr.sawEndOfFile = true;
+  slr.canUseBookmarkBytes = true;
   slr.linesAtEndOfFile = slr.lines.position;
 
   var notifyAndWatch = function () {
@@ -85,6 +92,8 @@ Reader.prototype.endStream = function () {
 
 Reader.prototype.readLine = function () {
   var slr = this;
+
+  slr.canUseBookmarkBytes = false;
 
   if (slr.alreadyRead()) return;
   if (slr.batchIsFull()) return;
@@ -174,8 +183,7 @@ Reader.prototype.createStream = function () {
   //
   // with transform streams, files/archives are closed automatically
   // at EOF. Reset the line position upon (re)open.
-  this.lines.position = 0;
-  this.bytesOffset = 0;
+  this.resetPosition();
 
   // splitters are gone after EOF. Start a new one
   this.lineSplitter();
@@ -186,12 +194,13 @@ Reader.prototype.createStream = function () {
       return;
     }
 
-    if (mark && mark.lines && !slr.noBookmark) {
-      logger.debug('\tlines.start: ' + mark.lines);
-      slr.lines.start = mark.lines;
+    if (/\.gz$/.test(slr.filePath)) {
+      if (mark && mark.lines && !slr.noBookmark) {
+        logger.debug('\tlines.start: ' + mark.lines);
+        slr.lines.start = mark.lines;
+      }
+      return slr.createStreamGzip();
     }
-
-    if (/\.gz$/.test(slr.filePath)) return slr.createStreamGzip();
     // if (/\.bz2$/.test(slr.filePath)) return slr.createStreamBz2();
 
     // options used only by plain text log files
@@ -204,21 +213,28 @@ Reader.prototype.createStream = function () {
       // the only time byte position is safe is when we've read to EOF.
       // Otherwise, the byte position contains buffered data that hasn't
       // been emitted as lines.
+      // This is now saved in a separate variable
 
       // the alternative to 'start' here, is splitting the entire file
       // into lines (again) and counting lines. Avoid if possible.
-      if (slr.sawEndOfFile && mark.size) {
+      if (slr.canUseBookmarkBytes && mark.size) {
         if (slr.linesAtEndOfFile !== mark.lines) {
           logger.error('lines@EOF: ' + slr.linesAtEndOfFile);
           logger.error('mark.lines: ' + mark.lines);
         }
-        logger.info('\tbytes.start: ' + mark.size);
+        logger.info('\tbytes.start: ' + mark.size + ' (lines: ' + mark.lines + ')');
         fileOpts.start = mark.size;
-        slr.sawEndOfFile = false;
         slr.lines.position = mark.lines;
         slr.bytesOffset = mark.size;
       }
+      else if (mark.lines) {
+        logger.debug('\tlines.start: ' + mark.lines);
+        slr.lines.start = mark.lines;
+      }
     }
+
+    // we need to start fresh
+    slr.sawEndOfFile = false;
 
     logger.debug('opening for read: ' + slr.filePath);
     fs.createReadStream(slr.filePath, fileOpts).pipe(slr.liner);
