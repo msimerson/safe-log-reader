@@ -42,7 +42,9 @@ describe('reader', function () {
     let linesSeen = 0;
     const filePath = path.join(dataDir, 'test.log.1');
 
+    // the file has 3 identical log lines, we should see 3 read events emitted
     reader.createReader(filePath, noBmReadOpts).on('read', (data, lines, bytes) => {
+        console.log(`${lines} ${data}`)
         linesSeen++;
         assert.equal(data, logLine);
         if (linesSeen === 3) done();
@@ -97,10 +99,11 @@ describe('reader', function () {
     const filePath = path.join(dataDir, 'test.log');
 
     reader.createReader(filePath, noBmReadOpts)
-      .on('testSetup', () => {
+      .on('testSetup', (cb) => {
         if (!this.batch) this.batch = {};
         this.batch.limit = 5;
         this.batch.count = 5;  // skip to batchLimit
+        if (cb) cb()
       })
       .on('read', (data) => {
         assert.equal(data, 'The rain in spain falls mainly on the plain.');
