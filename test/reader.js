@@ -45,10 +45,8 @@ describe('reader', function () {
     const filePath = path.join(dataDir, 'test.log.1');
 
     reader.createReader(filePath, noBmReadOpts)
+      .on('readable', () => { this.readLine(); })
       .on('read', (data, lines, bytes) => {
-console.log(data);
-console.log(lines);
-console.log(bytes);
         linesSeen++;
         assert.equal(data, logLine);
         if (linesSeen === 3) done();
@@ -63,6 +61,7 @@ console.log(bytes);
     batchOpts.noBookmark = true;
 
     reader.createReader(filePath, batchOpts)
+      .on('readable', () => { this.readLine(); })
       .on('read', function (data, lines, bytes) {
         linesSeen++;
         assert.equal(data, logLine);
@@ -76,6 +75,7 @@ console.log(bytes);
     const filePath = path.join(dataDir, 'test.log.1');
 
     reader.createReader(filePath, noBmReadOpts)
+      .on('readable', () => { this.readLine(); })
       .on('read', function (data, lines, bytes) {
         linesSeen++;
         assert.equal(lines, linesSeen);
