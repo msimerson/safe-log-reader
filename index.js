@@ -25,11 +25,11 @@ class Reader extends events.EventEmitter {
     this.startBytes   = 0;
     this.watchDelay   = process.env.NODE_ENV === 'test' ? 100 : 2000;
 
-    this.applyOptions(options);
+    this.applyOptions(options)
 
-    this.bookmark = new Bookmark(this.bookmarkDir);
-    this.resetPosition();
-    process.nextTick(() => { this.startReader() })
+    this.bookmark = new Bookmark(this.bookmarkDir)
+    this.resetPosition()
+    this.startReader()
   }
 
   applyOptions (options) {
@@ -95,6 +95,7 @@ class Reader extends events.EventEmitter {
     if (this.batchIsFull()) return;
 
     const line = this.liner.read();
+    console.log(`\treadLine from ${path.basename(this.filePath)}: ${line}`)
     if (line === null) return;         // EOF
 
     this.batch.count++;
