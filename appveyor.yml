@@ -1,5 +1,5 @@
 environment:
-  nodejs_version: "0.10"
+  nodejs_version: "8"
 
 # Install scripts. (runs after repo cloning)
 install:
@@ -14,7 +14,7 @@ test_script:
   - node --version
   - npm --version
   # run tests
-  - npm test
+  - node_modules\.bin\_mocha --exit
 
 # Don't actually build.
 build: off

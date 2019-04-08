@@ -2,6 +2,12 @@ language: node_js
 node_js:
     - "6"
     - "8"
+    - "10"
+
+matrix:
+  allow_failures:
+    - node_js: "10"
+  fast_finish: true
 
 services:
 
@@ -12,6 +18,7 @@ before_script:
 
 script:
     - npm run lint
+    - node node_modules/.bin/_mocha --forbid-only
     - npm test
 
 after_success:

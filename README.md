@@ -13,8 +13,8 @@ Read plain or compressed log files from disk, deliver as [batches of] lines to a
 
 # Usage
 
-````js
-var read = require('safe-line-reader');
+```js
+const read = require('safe-line-reader');
 read.createReader(filePath, {
     batchLimit: 1024,
     bookmark: {
@@ -28,7 +28,7 @@ read.createReader(filePath, {
 .on('end', function (done) {
     // close up shop and go home
 });
-````
+```
 
 ## Features
 
@@ -70,9 +70,6 @@ read.createReader(filePath, {
     - updates/creates normalized postfix docs
     - saves docs to elasticsearch
 - [x] [log-ship-elastic-qpsmtpd](https://github.com/msimerson/log-ship-elastic-qpsmtpd)
-    - receives JSON parsed log lines
-    - saves to elasticsearch
-- [ ] log-ship-elastic-lighttpd
     - receives JSON parsed log lines
     - saves to elasticsearch
 
