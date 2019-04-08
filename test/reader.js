@@ -45,7 +45,10 @@ describe('reader', function () {
     const filePath = path.join(dataDir, 'test.log.1');
 
     reader.createReader(filePath, noBmReadOpts)
-      .on('read', function (data, lines, bytes) {
+      .on('read', (data, lines, bytes) => {
+console.log(data);
+console.log(lines);
+console.log(bytes);
         linesSeen++;
         assert.equal(data, logLine);
         if (linesSeen === 3) done();

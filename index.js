@@ -39,12 +39,12 @@ class Reader extends events.EventEmitter {
     this.encoding   = options.encoding   || 'utf8';
     this.noBookmark = options.noBookmark || false;
     this.bookmarkDir = options.bookmark.dir || path.resolve('./', '.bookmark');
-    if (options.watchDelay) this.watchDelay = options.watchDelay * 1000;
 
-    this.batch        = { count: 0, limit: 0, delay: 0 };
+    this.batch     = { count: 0, limit: 0, delay: 0 };
 
     if (options.batchLimit) this.batch.limit = options.batchLimit;
     if (options.batchDelay) this.batch.delay = options.batchDelay;
+    if (options.watchDelay) this.watchDelay = options.watchDelay * 1000;
   }
 
   resetPosition () {
@@ -179,7 +179,7 @@ class Reader extends events.EventEmitter {
 
     this.bookmark.read(this.filePath, (err, mark) => {
       if (err && err.code !== 'ENOENT') {
-        logger.error('Error reading bookmark: ' + err.message);
+        logger.error(`Error reading bookmark: ${err.message}`);
         return;
       }
 
@@ -225,7 +225,7 @@ class Reader extends events.EventEmitter {
       // we need to start fresh
       this.sawEndOfFile = false;
 
-      logger.debug('opening for read: ' + this.filePath);
+      logger.debug(`opening for read: ${this.filePath}`);
       fs.createReadStream(this.filePath, fileOpts).pipe(this.liner);
     })
   }
