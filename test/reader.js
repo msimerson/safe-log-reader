@@ -43,12 +43,14 @@ describe('reader', function () {
     const filePath = path.join(dataDir, 'test.log.1');
 
     // the file has 3 identical log lines, we should see 3 read events emitted
-    reader.createReader(filePath, noBmReadOpts).on('read', (data, lines, bytes) => {
-        console.log(`${lines} ${data}`)
+    reader.createReader(filePath, noBmReadOpts)
+      .on('read', (data, lines, bytes) => {
+        // console.log(`${lines}. ${data}`)
         linesSeen++;
         assert.equal(data, logLine);
         if (linesSeen === 3) done();
       })
+      .on('drain', (done) => { done(null, 0); });
   })
 
   it('reads batches of lines', function (done) {
