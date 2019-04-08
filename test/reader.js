@@ -44,7 +44,6 @@ describe('reader', function () {
 
     // the file has 3 identical log lines, we should see 3 read events emitted
     reader.createReader(filePath, noBmReadOpts).on('read', (data, lines, bytes) => {
-        console.log(`${lines}. ${data}`)
         linesSeen++;
         assert.equal(data, logLine);
         if (linesSeen === 3) done();
