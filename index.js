@@ -25,21 +25,26 @@ class Reader extends events.EventEmitter {
     this.startBytes   = 0;
     this.watchDelay   = process.env.NODE_ENV === 'test' ? 100 : 2000;
 
+    this.applyOptions(options);
+
+    this.bookmark = new Bookmark(this.bookmarkDir);
+    this.resetPosition();
+    this.startReader();
+  }
+
+  applyOptions (options) {
     if (!options) options = { bookmark: { } };
-    this.watchOpts    = { persistent: true, recursive: false };
-    this.encoding     = options.encoding   || 'utf8';
-    this.noBookmark   = options.noBookmark || false;
-    this.bookmark     = new Bookmark(options.bookmark.dir || path.resolve('./', '.bookmark'));
+
+    this.watchOpts  = { persistent: true, recursive: false };
+    this.encoding   = options.encoding   || 'utf8';
+    this.noBookmark = options.noBookmark || false;
+    this.bookmarkDir = options.bookmark.dir || path.resolve('./', '.bookmark');
     if (options.watchDelay) this.watchDelay = options.watchDelay * 1000;
 
     this.batch        = { count: 0, limit: 0, delay: 0 };
 
     if (options.batchLimit) this.batch.limit = options.batchLimit;
     if (options.batchDelay) this.batch.delay = options.batchDelay;
-
-    this.resetPosition();
-
-    this.startReader();
   }
 
   resetPosition () {
@@ -180,7 +185,7 @@ class Reader extends events.EventEmitter {
 
       if (/\.gz$/.test(this.filePath)) {
         if (mark && mark.lines && !this.noBookmark) {
-          logger.debug(`\tlines.start: ${mark.lines}`);
+          logger.debug('\tlines.start: ' + mark.lines);
           this.lines.start = mark.lines;
         }
         return this.createStreamGzip();
