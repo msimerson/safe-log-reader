@@ -26,14 +26,23 @@ function newFile (filePath, data, done) {
   })
 }
 
+before(function (done) {
+  try {
+    fs.unlinkSync(path.join('test','data','missing.log'));
+  }
+  catch (ignore) { process.stdout.write(''); }
+  done();
+})
+
 describe('reader', function () {
 
   it('reads a text file', function (done) {
     const filePath = path.join(dataDir, 'test.log');
 
     // console.log(arguments);
-    reader.createReader(filePath, noBmReadOpts).on('read', (data) => {
+    const r = reader.createReader(filePath, noBmReadOpts).on('read', (data) => {
         assert.equal(data, logLine);
+        setTimeout(() => { r.watchStop(filePath); }, 500);
         done();
       })
   })
@@ -43,10 +52,13 @@ describe('reader', function () {
     const filePath = path.join(dataDir, 'test.log.1');
 
     // the file has 3 identical log lines, we should see 3 read events emitted
-    reader.createReader(filePath, noBmReadOpts).on('read', (data, lines, bytes) => {
+    const r = reader.createReader(filePath, noBmReadOpts).on('read', (data, lines, bytes) => {
         linesSeen++;
         assert.equal(data, logLine);
-        if (linesSeen === 3) done();
+        if (linesSeen === 3) {
+          setTimeout(() => { r.watchStop(filePath); }, 500);
+          done();
+        }
       })
   })
 
@@ -57,10 +69,13 @@ describe('reader', function () {
     batchOpts.batchLimit = 2;
     batchOpts.noBookmark = true;
 
-    reader.createReader(filePath, batchOpts).on('read', (data, lines, bytes) => {
+    const r = reader.createReader(filePath, batchOpts).on('read', (data, lines, bytes) => {
         linesSeen++;
         assert.equal(data, logLine);
-        if (linesSeen === 9) done();
+        if (linesSeen === 9) {
+          setTimeout(() => { r.watchStop(filePath); }, 500);
+          done();
+        }
       })
       .on('drain', (done) => { done(null, 0); });
   })
@@ -69,18 +84,22 @@ describe('reader', function () {
     let linesSeen = 0;
     const filePath = path.join(dataDir, 'test.log.1');
 
-    reader.createReader(filePath, noBmReadOpts).on('read', (data, lines, bytes) => {
+    const r = reader.createReader(filePath, noBmReadOpts).on('read', (data, lines, bytes) => {
         linesSeen++;
         assert.equal(lines, linesSeen);
-        if (linesSeen === 3) done();
+        if (linesSeen === 3) {
+          setTimeout(() => { r.watchStop(filePath); }, 500);
+          done();
+        }
       })
   })
 
   it('reads a gzipped file', function (done) {
-    reader.createReader(path.join(dataDir, 'test.log.1.gz'), noBmReadOpts)
+    const r = reader.createReader(path.join(dataDir, 'test.log.1.gz'), noBmReadOpts)
       .on('read', function (data) {
         // console.log(data);
         assert.equal(data, logLine);
+        setTimeout(() => { r.watchStop(dataDir); }, 500);
         done();
       })
   })
@@ -97,17 +116,18 @@ describe('reader', function () {
   it('emits a drain when batch is full', function (done) {
     const filePath = path.join(dataDir, 'test.log');
 
-    reader.createReader(filePath, noBmReadOpts)
+    const r = reader.createReader(filePath, noBmReadOpts)
       .on('testSetup', (cb) => {
         if (!this.batch) this.batch = {};
         this.batch.limit = 5;
         this.batch.count = 5;  // skip to batchLimit
         if (cb) cb()
       })
-      .on('read', (data) => {
-        assert.equal(data, 'The rain in spain falls mainly on the plain.');
+      .on('read', (data) => { assert.equal(data, logLine); })
+      .on('drain', (cb)  => {
+        cb(); done();
+        setTimeout(() => { r.watchStop(filePath); }, 500);
       })
-      .on('drain', (cb)  => { cb(); done(); })
   })
 
   context('growing file', function () {
@@ -136,10 +156,11 @@ describe('reader', function () {
         if (calledDone) return;
         calledDone = true;
         assert.equal(appendsRead, 1);
+        setTimeout(() => { r.watchStop(appendFile); }, 500);
         done();
       }
 
-      reader.createReader(appendFile, readerOpts)
+      const r = reader.createReader(appendFile, readerOpts)
         .on('read', function (data, linesRead) {
           // console.log('line: ' + linesRead + ', ' + data);
           if (appendDone) {
@@ -171,6 +192,11 @@ describe('reader', function () {
 
   context('after file rotation', function () {
 
+    before(function (done) {
+      // if (process.platform === 'win32') this.skip();
+      done()
+    })
+
     this.timeout(3000);
     it('reads lines appended to new file rotate.log', function (done) {
       let renameCalled = false;
@@ -187,22 +213,26 @@ describe('reader', function () {
               LOG_LINE: logLine + '\n',
             }
           })
-          .on('message', function (msg) {
+          .on('message', (msg) => {
             // console.log(msg);
             appendDone = true;
           });
       }
 
+      let r;
+
       function tryDone () {
-        if (appendDone) return done();
+        if (appendDone) {
+          setTimeout(() => { r.watchStop(rotateLog); }, 500);
+          return done();
+        }
         setTimeout(() => { tryDone(); }, 10);
       }
 
-      newFile(rotateLog, logLine + '\n', function () {
+      newFile(rotateLog, `${logLine}\n`, () => {
 
-        reader.createReader(rotateLog, readerOpts)
-          .on('read', (data, lineCount) => {
-            // console.log(lineCount + '. ' + data);
+        r = reader.createReader(rotateLog, readerOpts).on('read', (data, lineCount) => {
+            // logger.debug(lineCount + '. ' + data);
 
             if (appendDone) tryDone();
             if (renameCalled) return;
@@ -216,13 +246,14 @@ describe('reader', function () {
                   NEW_PATH: rotateLog + '.1',
                 }
               })
-              .on('message', function (msg) {
+              .on('message', (msg) => {
                 // console.log(msg);
                 doAppend();
               });
           })
           .on('end', function () {
-          // console.log('end');
+            setTimeout(() => { r.watchStop(rotateLog); }, 500);
+            // console.log('end');
           })
       })
     })
@@ -286,7 +317,7 @@ describe('reader', function () {
     } };
 
     before(function (done) {
-      fs.unlink(missingFile, function (err) {
+      fs.unlink(missingFile, (err) => {
         // might not exist, ignore err
         done();
       })
@@ -296,11 +327,14 @@ describe('reader', function () {
 
       let appendDone = false;
       function tryDone () {
-        if (appendDone) return done();
+        if (appendDone) {
+          setTimeout(() => { r.watchStop(missingFile); }, 500);
+          return done();
+        }
         setTimeout(() => { tryDone(); }, 10);
       }
 
-      reader.createReader(missingFile, noBmReadOpts).on('irrelevantFile', (filename) => {
+      const r = reader.createReader(missingFile, noBmReadOpts).on('irrelevantFile', (filename) => {
           // console.log('irrelevantFile: ' + filename);
           assert.equal(filename, path.basename(irrelevantFile));
           tryDone();
@@ -315,8 +349,9 @@ describe('reader', function () {
               LOG_LINE: (logLine + '\n'),
             }
           })
-          .on('message', function (msg) {
+          .on('message', (msg) => {
             appendDone = true;
+            setTimeout(() => { r.watchStop(irrelevantFile); }, 500);
             // console.log('fileAppend message: ' + msg);
           })
       })
@@ -324,19 +359,30 @@ describe('reader', function () {
 
     it('discovers and reads', function (done) {
 
+      before(function (done) {
+        if (process.platform === 'win32') this.skip();
+        done()
+      })
+
       let appendDone = false;
       function tryDone () {
-        if (appendDone) return done();
+        if (appendDone) {
+          setTimeout(() => { r.watchStop(missingFile); }, 500);
+          return done();
+        }
         setTimeout(() => { tryDone(); }, 10);
       }
 
-      reader.createReader(missingFile, noBmReadOpts)
+      const r = reader.createReader(missingFile, noBmReadOpts)
         .on('read', (data) => {
           assert.equal(data, logLine);
           tryDone();
         })
         .on('error', (err) => {
           console.error('error: ' + err);
+        })
+        .on('end', () => {
+          setTimeout(() => { r.watchStop(missingFile); }, 500);
         })
 
       process.nextTick(() => {
@@ -358,13 +404,14 @@ describe('reader', function () {
     })
   })
 
-  describe('unreadable file', () => {
+  describe('unreadable file', function () {
     it('reads nothing', function (done) {
       const filePath = path.join(dataDir, 'test-no-perm.log');
 
       setTimeout(() => { done(); }, 100);
+      setTimeout(() => { r.watchStop(filePath); }, 500);
 
-      reader.createReader(filePath, readerOpts)
+      const r = reader.createReader(filePath, readerOpts)
         .on('readable', () => { assert.ok(false); })
         .on('read', (data) => { assert.equal(data, false); })
     })
@@ -372,19 +419,15 @@ describe('reader', function () {
     it('does not watch', function (done) {
       const filePath = path.join(dataDir, 'test-no-perm.log');
 
-      var r = reader.createReader(filePath, readerOpts)
+      const r = reader.createReader(filePath, readerOpts)
         .on('readable', () => { assert.ok(false); })
         .on('read', (data) => { assert.equal(data, false); });
 
       process.nextTick(function () {
         assert.equal(r.watcher, undefined);
-        r.watcher = true;
-        r.endStream();
-        // console.log(r);
 
-        process.nextTick(() => {
-          setTimeout(() => { done(); }, 100);
-        })
+        setTimeout(() => { done(); }, 100);
+        setTimeout(() => { r.watchStop(filePath); }, 500);
       })
     })
   })
@@ -393,32 +436,34 @@ describe('reader', function () {
 
     it('skips lines confirmed as saved', function (done) {
 
-      var Bookmark = require('../lib/bookmark');
-      var bookmark = new Bookmark(readerOpts.bookmark.dir);
+      const Bookmark = require('../lib/bookmark');
+      const bookmark = new Bookmark(readerOpts.bookmark.dir);
 
       const data = [];
-      for (var i = 0; i < 10; i++) {
-        data.push('Line number ' + i);
+      for (let i = 0; i < 10; i++) {
+        data.push(`Line number ${i}`);
       }
       const filePath = path.join(dataDir, 'previous.log');
-      fs.writeFile(filePath, data.join('\n'), function (err) {
+      fs.writeFile(filePath, data.join('\n'), (err) => {
         if (err) return done(err);
-        fs.stat(filePath, function (err, stat) {
+        fs.stat(filePath, (err, stat) => {
           if (err) return done(err);
-          bookmark.save({ file: filePath, lines: 10 }, function (err) {
-            fs.appendFile(filePath, '\n' + data.join('\n'), function (err) {
+          bookmark.save({ file: filePath, lines: 10 }, (err) => {
+            if (err) return done(err);
+            fs.appendFile(filePath, '\n' + data.join('\n'), (err) => {
               if (err) return done(err);
-              var readLines = 0;
-              reader.createReader(filePath, readerOpts)
+              let readLines = 0;
+              const r = reader.createReader(filePath, readerOpts)
                 .on('read', function (data) {
                   readLines++;
                   // console.log(data);
                 })
-                .on('drain', function (cb) {
+                .on('drain', (cb) => {
                   cb();
                 })
-                .on('end', function () {
+                .on('end', () => {
                   assert.equal(readLines, 10);
+                  setTimeout(() => { r.watchStop(filePath); }, 500);
                   done();
                 })
             })
@@ -431,43 +476,47 @@ describe('reader', function () {
   describe('on a file previously read using bytes', function () {
     it('skips bytes confirmed as saved', function (done) {
 
-      var Bookmark = require('../lib/bookmark');
-      var bookmark = new Bookmark(readerOpts.bookmark.dir);
+      const Bookmark = require('../lib/bookmark');
+      const bookmark = new Bookmark(readerOpts.bookmark.dir);
 
-      var data = [];
-      for (var i = 0; i < 10; i++) {
+      const data = [];
+      for (let i = 0; i < 10; i++) {
         data.push('Line number ' + i);
       }
       const filePath = path.join(dataDir, 'bytes.log');
-      fs.writeFile(filePath, data.join('\n'), function (err) {
+      fs.writeFile(filePath, data.join('\n'), (err) => {
         if (err) return done(err);
-        fs.stat(filePath, function (err, stat) {
+        fs.stat(filePath, (err, stat) => {
           if (err) return done(err);
           // bytes is size of file + EOL
-          bookmark.save({ file: filePath, lines: 10, bytes: stat.size + EOL.length }, function (err) {
-            fs.appendFile(filePath, '\n' + data.join('\n'), function (err) {
+          bookmark.save({ file: filePath, lines: 10, bytes: stat.size + EOL.length }, (err) => {
+            fs.appendFile(filePath, '\n' + data.join('\n'), (err) => {
               if (err) return done(err);
-              var readLines = 0;
-              var r = reader.createReader(filePath, readerOpts)
-                .on('read', function (data) {
+              let readLines = 0;
+              const r = reader.createReader(filePath, readerOpts)
+                .on('read', (data) => {
                   readLines++;
                   // console.log(data);
                 })
-                .on('drain', function (cb) {
+                .on('drain', (cb) => {
+                  // console.log('drain');
                   cb();
                 })
-                .on('end', function (cb) {
+                .on('end', () => {
+                  // console.log('end');
+                  // console.log(reader.watcher);
                   assert.equal(readLines, 10);
+                  setTimeout(() => { r.watchStop(filePath); }, 1000);
                   done();
-                });
+                })
               // required otherwise bytes wont be used
               r.canUseBookmarkBytes = true;
               r.linesAtEndOfFile = 10;
-            });
-          });
-        });
-      });
-    });
+            })
+          })
+        })
+      })
+    })
   })
 
   context('reads lines appended to empty file', function () {
@@ -475,31 +524,33 @@ describe('reader', function () {
 
     it('reads lines appended to empty file with empty bookmark', function (done) {
 
-      var emptyLog = path.join(dataDir, 'empty_nobm.log');
-      var appendDone = false;
-      var readLines = 0;
+      const emptyLog = path.join(dataDir, 'empty_nobm.log');
+      let appendDone = false;
+      let readLines = 0;
+      let r;
 
-      var tryDone = function () {
-        if (appendDone) return done();
+      function tryDone () {
+        if (appendDone) {
+          setTimeout(() => { r.watchStop(emptyLog); }, 500);
+          return done();
+        }
         setTimeout(function () {
           tryDone();
         }, 10);
-      };
+      }
 
       newFile(emptyLog, '', function () {
         fs.stat(emptyLog, function (err, stat) {
           if (err) return done(err);
 
-          fs.unlink(path.join(readerOpts.bookmark.dir, stat.ino.toString()), function () {
-            reader.createReader(emptyLog, readerOpts)
+          fs.unlink(path.join(readerOpts.bookmark.dir, stat.ino.toString()), () => {
+            r = reader.createReader(emptyLog, readerOpts)
               .on('read', function (data, lineCount) {
                 // console.log(lineCount + '. ' + data);
                 if (appendDone && ++readLines == 2) tryDone();
               })
-              .on('drain', function(next){
-                next();
-              })
-              .on('end', function () {
+              .on('drain', (next) => { next(); })
+              .on('end', () => {
                 if (appendDone === false) {
                   child.fork(path.join('test', 'helpers', 'fileAppend.js'), {
                     env: {
@@ -507,10 +558,10 @@ describe('reader', function () {
                       LOG_LINE: logLine + '\n' + logLine + '\n',
                     }
                   })
-                  .on('message', function (msg) {
+                  .on('message', (msg) => {
                     // console.log(msg);
                     appendDone = true;
-                  });
+                  })
                 }
                 // console.log('end');
               })
@@ -521,26 +572,28 @@ describe('reader', function () {
 
     it('reads lines appended to empty file with old bookmark', function (done) {
 
-      var Bookmark = require('../lib/bookmark');
-      var bookmark = new Bookmark(readerOpts.bookmark.dir);
+      const Bookmark = require('../lib/bookmark');
+      const bookmark = new Bookmark(readerOpts.bookmark.dir);
 
-      var emptyLog = path.join(dataDir, 'empty_oldbm.log');
-      var appendDone = false;
-      var readLines = 0;
+      const emptyLog = path.join(dataDir, 'empty_oldbm.log');
+      let appendDone = false;
+      let readLines = 0;
+      let r;
 
-      var tryDone = function () {
-        if (appendDone) return done();
-        setTimeout(function () {
-          tryDone();
-        }, 10);
-      };
+      function tryDone () {
+        if (appendDone) {
+          setTimeout(() => { r.watchStop(emptyLog); }, 500);
+          return done();
+        }
+        setTimeout(() => { tryDone(); }, 10);
+      }
 
       newFile(emptyLog, '', function () {
         fs.stat(emptyLog, function (err, stat) {
           if (err) return done(err);
 
           bookmark.save({ file: emptyLog, lines: 12087, bytes: 4242424242 }, function (err) {
-            reader.createReader(emptyLog, readerOpts)
+            r = reader.createReader(emptyLog, readerOpts)
               .on('read', function (data, lineCount) {
                 // console.log(lineCount + '. ' + data);
                 if (appendDone && ++readLines == 2) tryDone();

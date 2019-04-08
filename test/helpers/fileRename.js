@@ -1,15 +1,14 @@
 'use strict';
 
-var assert  = require('assert');
-var fs      = require('fs');
-var path    = require('path');
+const assert  = require('assert');
+const fs      = require('fs');
+const path    = require('path');
 
-var tmpDir  = path.resolve('test', 'tmp');
-var oldPath = process.env.OLD_PATH || path.resolve(tmpDir, 'old');
-var newPath = process.env.NEW_PATH || path.resolve(tmpDir, 'new');
+const tmpDir  = path.resolve('test', 'tmp');
+const oldPath = process.env.OLD_PATH || path.resolve(tmpDir, 'old');
+const newPath = process.env.NEW_PATH || path.resolve(tmpDir, 'new');
 
-fs.rename(oldPath, newPath, function (err) {
+fs.rename(oldPath, newPath, (err) => {
   assert.ifError(err);
-  process.send('fileRename -> fs.rename: \n\t' +
-    oldPath + ' -> \n\t' + newPath);
-});
+  process.send(`fileRename -> fs.rename: \n\t ${oldPath} -> \n\t${newPath}`);
+})

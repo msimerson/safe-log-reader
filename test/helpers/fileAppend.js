@@ -1,12 +1,12 @@
 'use strict';
 
-var assert  = require('assert');
-var fs      = require('fs');
+const assert  = require('assert');
+const fs      = require('fs');
 
-var filePath = process.env.FILE_PATH;
-var newLine  = process.env.LOG_LINE || 'you forget to set LOG_LINE\n';
+const filePath = process.env.FILE_PATH;
+const newLine  = process.env.LOG_LINE || 'you forget to set LOG_LINE\n';
 
-fs.appendFile(filePath, newLine, function (err) {
+fs.appendFile(filePath, newLine, (err) => {
   assert.ifError(err);
-  process.send('fileAppend -> fs.appendFile: ' + filePath);
-});
+  process.send(`fileAppend -> fs.appendFile: ${filePath}`);
+})

@@ -95,7 +95,7 @@ class Reader extends events.EventEmitter {
     if (this.batchIsFull()) return;
 
     const line = this.liner.read();
-    console.log(`\treadLine from ${path.basename(this.filePath)}: ${line}`)
+    // console.log(`\treadLine from ${path.basename(this.filePath)}: ${line}`)
     if (line === null) return;         // EOF
 
     this.batch.count++;
@@ -194,7 +194,7 @@ class Reader extends events.EventEmitter {
       // if (/\.bz2$/.test(this.filePath)) return this.createStreamBz2();
 
       // options used only by plain text log files
-      var fileOpts = {
+      const fileOpts = {
         autoClose: true,
         encoding: this.encoding,
       }
@@ -320,14 +320,20 @@ class Reader extends events.EventEmitter {
     }
   }
 
+  watchStop (filename) {
+    logger.debug(`stopping watching ${filename}`)
+    if (!this.watcher) return;
+    this.watcher.close();
+    this.watcher = null;
+  }
+
   watchChange (filename) {
 
     // Depending on underlying OS semantics, we can get multiple of these
     // events in rapid succession. ignore subsequent.
     if (!this.watcher) return;
 
-    this.watcher.close();
-    this.watcher = null;
+    this.watchStop(this.filePath);
 
     // give the events a chance to settle
     setTimeout(() => { this.createStream(); }, this.watchDelay);
@@ -336,19 +342,19 @@ class Reader extends events.EventEmitter {
   watchRename (filename) {
     // logger.info('\trename: ' + filename);
 
-    if (this.watcher) {
-      this.watcher.close();
-      this.watcher = null;
-    }
+    if (this.watcher) this.watchStop('');
 
     switch (process.platform) {
       case 'darwin':
         this.renameMacOS(filename);
-        return;
+        break;
       case 'freebsd':
       case 'linux':
         this.renameLinux(filename);
-        return;
+        break;
+      case 'win32':
+        this.renameLinux(filename);
+        break;
       default:
         // falls through
         logger.error(`report this as GitHub Issue:\n\trename: ${filename} on ${process.platform}`)

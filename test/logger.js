@@ -1,12 +1,12 @@
 'use strict';
 
-var assert = require('assert');
+const assert = require('assert');
 
-var logger = require('../lib/logger');
+const logger = require('../lib/logger');
 
 describe('logger', function () {
 
-  ['info', 'error', 'debug'].forEach(function (level) {
+  ['info', 'error', 'debug'].forEach((level) => {
     it('has ' + level + ' function', function () {
       assert.equal(typeof logger[level], 'function');
     });
@@ -29,6 +29,6 @@ describe('logger', function () {
       delete process.env.NODE_ENV;
       assert.ifError(logger.error('test error'));
       process.env.NODE_ENV='test';
-    });
-  });
-});
+    })
+  })
+})

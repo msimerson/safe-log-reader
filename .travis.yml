@@ -18,6 +18,7 @@ before_script:
 
 script:
     - npm run lint
+    - node node_modules/.bin/_mocha --forbid-only
     - npm test
 
 after_success:
