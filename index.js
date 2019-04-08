@@ -29,7 +29,7 @@ class Reader extends events.EventEmitter {
 
     this.bookmark = new Bookmark(this.bookmarkDir);
     this.resetPosition();
-    this.startReader();
+    process.nextTick(() => { this.startReader() })
   }
 
   applyOptions (options) {
@@ -251,7 +251,7 @@ class Reader extends events.EventEmitter {
     })
       .on('readable', () => {
         if (process.env.WANTS_SHUTDOWN) return; // cease reading
-        this.emit('testSetup');
+        this.emit('testSetup')
         this.readLine();
       })
       .on('end', () => {
