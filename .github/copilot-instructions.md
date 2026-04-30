@@ -2,15 +2,15 @@
 
 ## Project Overview
 
-**safe-log-reader** is a Node.js library for reliably reading log files with automatic resumption at safe positions. It handles file rotation, compressed archives (gzip), and multi-byte UTF-8 characters. The key innovation is the bookmark system that persists reading position by inode + line number, enabling safe recovery after interruptions without duplicate or skipped lines.
+**safe-log-reader** is a Node.js ESM library for reliably reading log files with automatic resumption at safe positions. It handles file rotation, compressed archives (gzip), and multi-byte UTF-8 characters. The key innovation is the bookmark system that persists reading position by inode + line number, enabling safe recovery after interruptions without duplicate or skipped lines.
 
 ## Build, Test, and Lint
 
 ### Running Tests
 ```bash
-npm run test              # Full test suite (with file permission setup via test/run.sh)
-npm run test:coverage    # Test with coverage reporting
-npm run test:coverage:lcov  # Generate LCOV coverage report
+npm test                     # Full test suite (with file permission setup via test/run.sh)
+npm run test:coverage        # Test with coverage reporting
+npm run test:coverage:lcov   # Generate LCOV coverage report
 ```
 
 Test environment variables:
@@ -20,11 +20,11 @@ Test environment variables:
 
 ### Linting
 ```bash
-npm run lint             # Run ESLint on all *.js and test/*.js files
+npm run lint    # Run ESLint on all source and test files
 ```
 
 ### No Build Step
-This is a library with zero dependencies. No build process required.
+This is a zero-dependency library. No build process required.
 
 ## Architecture
 
@@ -32,8 +32,8 @@ This is a library with zero dependencies. No build process required.
 
 **index.js (Reader class)**
 - Main export: `createReader(filePath, options)` returns an EventEmitter
-- Manages file watching, stream creation, and event coordination
-- Lifecycle: stat file → create stream → pipe through LineSplitter → emit 'read' events → save bookmark on success
+- All internal methods are private (`#method()` syntax); only `watchStop()` is public
+- Lifecycle: stat file → create stream → pipe through LineSplitter → emit `read` events → save bookmark on drain → repeat
 
 **lib/bookmark.js**
 - Persists reading position as JSON keyed by file inode
@@ -44,7 +44,7 @@ This is a library with zero dependencies. No build process required.
 **lib/line-splitter.js (Transform Stream)**
 - Converts raw byte chunks to line strings
 - Handles multi-byte UTF-8 characters correctly via StringDecoder
-- Emits one line per push()
+- Emits one line per `push()`
 - Buffers incomplete lines until separator found
 
 **lib/logger.js**
@@ -52,41 +52,38 @@ This is a library with zero dependencies. No build process required.
 - Respects: `DEBUG` env var, `NODE_ENV=test` silences output
 
 ### Event Flow
-1. **'readable'** event fires when data available from stream
-   - **Important**: In Node 22+, this may fire multiple times with buffered data
-   - Must loop `while (this.readLine())` to consume all available data (see memory note)
-2. **'read'** event emitted per line (custom event on Reader)
-3. Consumer processes line, calls `readLine()` when ready (paused mode)
-4. On success, consumer may call `saveBookmark()` to persist position
-5. **'end'** event when stream exhausted
+1. `'readable'` fires when data is available from the stream
+2. `'read'` emitted per line with `(line, lineNumber)`
+3. When `batchLimit` lines reached (or EOF): `'drain'` emitted with a `done` callback
+4. Consumer calls `done(err, delaySeconds)` to save bookmark and resume
+5. `'end'` emitted when stream exhausted; watcher is active
 
 ### Bookmark Safety Model
 - **Problem**: Reading stops mid-file at arbitrary byte position, possibly mid-line or mid-UTF8-character
 - **Solution**: Track line numbers, save byte offsets only when EOF reached, use inodes to detect file rotation
-- **Resume**: Rewind by `bookmarkBuffer` (unused buffered bytes) to replay, dedup lines in consumer
+- **Resume**: Uses byte position after confirmed-safe EOF; falls back to line-count skipping otherwise
 - When file rotates (inode changes), new bookmark starts fresh
 
 ## Coding Conventions
 
 ### Style & Patterns
-- CommonJS modules (`require`/`module.exports`)
-- Event-driven via EventEmitter
-- Streams-based I/O (Transform streams, pipe chains)
-- Async callbacks or EventEmitter pattern (no promises/async-await)
+- ES Modules (`import`/`export`), Node.js built-in modules use `node:` prefix
+- `async`/`await` throughout; all I/O uses `fs/promises`
+- Private class methods via `#method()` syntax (ES2022)
+- Event-driven via EventEmitter for the public API
 - Single quotes for strings
-- Always start files with `'use strict';`
 
 ### Variable Naming
 - `filePath` for resolved absolute paths
-- `linePath` for bookmark files
+- `bmPath` for bookmark files
 - `bytesOffset` / `lines.position` for tracking progress
 - `liner` for the Transform stream instance
 - `mark` for bookmark objects
 
 ### Error Handling
-- Errors passed to callbacks (Node.js callback convention)
-- Tests use assert for simple comparisons
-- Environment variables for test/debug modes, not command-line args
+- Async errors propagate via `throw` / rejected promises
+- Tests use `assert.rejects()` for expected async errors
+- Environment variables for test/debug modes
 
 ### File Permissions in Tests
 Test setup handles special permissions:
@@ -96,43 +93,9 @@ chmod ugo-w ./test/data/nowrite            # Unwritable dir
 chmod ugo-r ./test/data/noread             # Unreadable dir
 ```
 
-## Important Notes
-
-### Node 22+ Readable Event Behavior
-In Node 22+, the `'readable'` event on Transform streams may fire multiple times while buffering data. The reader must loop through `readLine()` calls until it returns falsy:
-```js
-.on('readable', () => {
-  while (this.readLine()) {
-    // readLine returns true or 'skipping' to continue,
-    // false (falsy) to stop
-  }
-})
-```
-
-### Bookmark Directory Setup
-Options can specify custom bookmark dir:
-```js
-const opts = {
-  bookmark: { dir: path.resolve('custom', '.bookmarks') }
-};
-```
-If not specified, defaults to `./.bookmark` in working directory.
-
-### Supporting Compressed Files
-Gzip archives are automatically detected by `.gz` extension:
-```js
-fs.createReadStream(filePath).pipe(zlib.createGunzip()).pipe(this.liner);
-```
-Bzip2 support is not implemented (noted in code as TODO using bunzip2 CLI).
-
-### Testing Permissions
-Before running tests, `test/run.sh` modifies file permissions. Restore them afterwards:
-```bash
-chmod ugo+r ./test/data/noread
-```
-
 ## Key Files
-- `index.js` (280 lines) - Main Reader class
-- `lib/bookmark.js` (125 lines) - Persistence layer
-- `lib/line-splitter.js` (57 lines) - Stream transformation
-- `test/reader.js` - Main test suite
+- `index.js` — Main Reader class and `createReader` export
+- `lib/bookmark.js` — Persistence layer (async, atomic writes)
+- `lib/line-splitter.js` — Transform stream: bytes → lines
+- `test/reader.js` — Main integration test suite
+- `test/run.sh` — Test runner (handles permissions + optional coverage)

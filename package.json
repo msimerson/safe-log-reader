@@ -24,12 +24,12 @@
   "config": {},
   "license": "BSD-2-Clause",
   "scripts": {
-    "lint": "npm install @eslint/js eslint globals && npx eslint *.js test/*.js",
+    "lint": "sh ./test/run.sh lint",
     "test": "sh ./test/run.sh",
     "test:coverage": "sh ./test/run.sh cov",
     "test:coverage:lcov": "sh ./test/run.sh lcov"
   },
-  "dependencies": {
+  "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.2.1",
     "globals": "^17.5.0"

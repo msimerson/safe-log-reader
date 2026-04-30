@@ -8,3 +8,4 @@ test/data/missing.log
 test/data/previous.log
 package-lock.json
 coverage
+.claude
