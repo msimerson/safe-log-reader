@@ -1,6 +1,7 @@
 ## 2.0.0 - 2026-04-30
 
 - refactored as ESM
+- all async/await now
 
 ## 1.1.0 - 2026-04-29
 

@@ -7,10 +7,9 @@ export default [
     languageOptions: {
       globals: {
         ...globals.node,
-        ...globals.mocha,
       },
       ecmaVersion: 2024,
-      sourceType: "commonjs",
+      sourceType: "module",
     },
     rules: {
       curly: ["warn", "multi-line"],
@@ -25,13 +24,6 @@ export default [
         },
       ],
       radix: "error",
-      strict: ["error", "global"],
-    },
-  },
-  {
-    files: ["eslint.config.mjs"],
-    languageOptions: {
-      sourceType: "module",
     },
   },
 ];

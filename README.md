@@ -77,9 +77,8 @@ read.createReader(filePath, {
 
 * [tail-stream](https://github.com/Juul/tail-stream) has good options for
   reading a file and handling rotation, truncation, and resuming. It had no
-  tests so I wrote them and most have been merged. Bugs remain
-  (demonstrated with Travis-CI test integration) unresolved. The author
-  offered a license in exchange for the tests but the GPL is problematic.
+  tests so I wrote them and most have been merged. Bugs remain unresolved.
+  The GPL license was problematic.
 * [tail-forever](https://github.com/mingqi/tail-forever) has character
   encoding detection and very basic file watching.
 * [always-tail](https://github.com/jandre/always-tail)
@@ -104,12 +103,10 @@ Safe-log-reader uses a Transform Stream to convert the byte stream into
 lines. This makes it dead simple to read compressed files by adding
 a `.pipe(ungzip())` into the stream.
 
-
 <sub>Copyright 2015 by eFolder, Inc.</sub>
 
-
-[ci-img]: https://travis-ci.org/msimerson/safe-log-reader.svg
-[ci-url]: https://travis-ci.org/msimerson/safe-log-reader
+[ci-img]: https://github.com/msimerson/safe-log-reader/actions/workflows/test.yml/badge.svg
+[ci-url]: https://github.com/msimerson/safe-log-reader/actions/workflows/test.yml
 [cov-img]: https://codecov.io/github/msimerson/safe-log-reader/badge.svg
 [cov-url]: https://codecov.io/github/msimerson/safe-log-reader
 [clim-img]: https://codeclimate.com/github/msimerson/safe-log-reader/badges/gpa.svg

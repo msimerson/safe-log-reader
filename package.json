@@ -1,8 +1,8 @@
 {
   "name": "safe-log-reader",
   "description": "Safe Log Reader",
-  "version": "1.1.0",
-  "private": false,
+  "version": "2.0.0",
+  "type": "module",
   "files": [
     "lib",
     "Changes.md"
@@ -26,9 +26,8 @@
   "scripts": {
     "lint": "npm install @eslint/js eslint globals && npx eslint *.js test/*.js",
     "test": "sh ./test/run.sh",
-    "test:coverage": "node --test --experimental-test-coverage",
-    "test:coverage:lcov": "mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info",
-    "coverage": "NODE_ENV=cov npx istanbul cover npx mocha -- -R spec"
+    "test:coverage": "sh ./test/run.sh cov",
+    "test:coverage:lcov": "sh ./test/run.sh lcov"
   },
   "dependencies": {
     "@eslint/js": "^10.0.1",
