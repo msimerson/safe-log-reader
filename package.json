@@ -3,6 +3,10 @@
   "description": "Safe Log Reader",
   "version": "1.1.0",
   "private": false,
+  "files": [
+    "lib",
+    "Changes.md"
+  ],
   "keywords": [
     "log",
     "reader",

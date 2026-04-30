@@ -1,8 +1,12 @@
+## 2.0.0 - 2026-04-30
+
+- refactored as ESM
 
 ## 1.1.0 - 2026-04-29
 
 - updates for node 22+ compat
 - dev: update eslint to v10
+- test: replaced mocha with node:test
 
 ## 1.0.8 - 2017-08-22
 
