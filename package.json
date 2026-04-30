@@ -17,7 +17,6 @@
     "type": "git",
     "url": "git://github.com/msimerson/safe-log-reader.git"
   },
-  "devDependencies": {},
   "config": {},
   "license": "BSD-2-Clause",
   "scripts": {
@@ -26,5 +25,10 @@
     "test:coverage": "node --test --experimental-test-coverage",
     "test:coverage:lcov": "mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info",
     "coverage": "NODE_ENV=cov npx istanbul cover npx mocha -- -R spec"
+  },
+  "dependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.2.1",
+    "globals": "^17.5.0"
   }
 }

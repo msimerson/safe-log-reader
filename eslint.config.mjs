@@ -24,7 +24,6 @@ export default [
           varsIgnorePattern: "^_$",
         },
       ],
-      "no-use-before-define": ["error", "nofunc"],
       radix: "error",
       strict: ["error", "global"],
     },
