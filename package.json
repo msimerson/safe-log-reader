@@ -1,7 +1,7 @@
 {
   "name": "safe-log-reader",
   "description": "Safe Log Reader",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "private": false,
   "keywords": [
     "log",
