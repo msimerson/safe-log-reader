@@ -1,4 +1,9 @@
 
+## 1.1.0 - 2026-04-29
+
+- updates for node 22+ compat
+- dev: update eslint to v10
+
 ## 1.0.8 - 2017-08-22
 
 - Fix and test the bookmark bytes #24 by @TidamCo
