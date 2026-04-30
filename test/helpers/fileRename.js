@@ -1,14 +1,9 @@
-'use strict';
+import { rename } from 'node:fs/promises';
+import { resolve } from 'node:path';
 
-const assert  = require('assert');
-const fs      = require('fs');
-const path    = require('path');
+const tmpDir  = resolve('test', 'tmp');
+const oldPath = process.env.OLD_PATH || resolve(tmpDir, 'old');
+const newPath = process.env.NEW_PATH || resolve(tmpDir, 'new');
 
-const tmpDir  = path.resolve('test', 'tmp');
-const oldPath = process.env.OLD_PATH || path.resolve(tmpDir, 'old');
-const newPath = process.env.NEW_PATH || path.resolve(tmpDir, 'new');
-
-fs.rename(oldPath, newPath, (err) => {
-  assert.ifError(err);
-  process.send(`fileRename -> fs.rename: \n\t ${oldPath} -> \n\t${newPath}`);
-})
+await rename(oldPath, newPath);
+process.send(`fileRename -> fs.rename: \n\t ${oldPath} -> \n\t${newPath}`);

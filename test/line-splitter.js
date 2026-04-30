@@ -1,20 +1,15 @@
-'use strict';
-
-const assert = require('assert')
-const stream = require('stream')
-
-const { describe, it } = require('node:test');
-const LineSplitter = require('../lib/line-splitter')
+import assert from 'node:assert';
+import { Transform } from 'node:stream';
+import { describe, it } from 'node:test';
+import { LineSplitter } from '../lib/line-splitter.js';
 
 describe('line-splitter', () => {
-  it('creates a stream.Transform instance', function (_t, done) {
+  it('creates a stream.Transform instance', () => {
     const liner = new LineSplitter();
-    assert.ok(liner instanceof stream.Transform);
-    done();
-  })
+    assert.ok(liner instanceof Transform);
+  });
 
-  it('sets a streams encoding', function (_t, done) {
+  it('sets a streams encoding', () => {
     // TODO
-    done();
-  })
-})
+  });
+});
