@@ -41,11 +41,11 @@ describe('bookmark', function () {
 
   it('errors on unwritable bookmark dir', function (done) {
 
-    const noPermDir = path.resolve('test', 'data.nowrite', 'any');
+    const noPermDir = path.resolve('test', 'data', 'nowrite', 'newdir-' + Date.now());
     const book = require('../lib/bookmark')(noPermDir);
     book.createDir(() => {
       fs.stat(noPermDir, (err, stat) => {
-        assert.ok(err);
+        assert.ok(err, 'should error when creating dir in nowrite dir');
         done();
       })
     })

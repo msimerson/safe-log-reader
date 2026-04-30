@@ -42,7 +42,7 @@ describe('reader', function () {
     // console.log(arguments);
     const r = reader.createReader(filePath, noBmReadOpts).on('read', (data) => {
         assert.equal(data, logLine);
-        setTimeout(() => { r.watchStop(filePath); }, 500);
+        r.watchStop(filePath);
         done();
       })
   })
@@ -56,7 +56,7 @@ describe('reader', function () {
         linesSeen++;
         assert.equal(data, logLine);
         if (linesSeen === 3) {
-          setTimeout(() => { r.watchStop(filePath); }, 500);
+          r.watchStop(filePath);
           done();
         }
       })
@@ -73,7 +73,7 @@ describe('reader', function () {
         linesSeen++;
         assert.equal(data, logLine);
         if (linesSeen === 9) {
-          setTimeout(() => { r.watchStop(filePath); }, 500);
+          r.watchStop(filePath);
           done();
         }
       })
@@ -88,7 +88,7 @@ describe('reader', function () {
         linesSeen++;
         assert.equal(lines, linesSeen);
         if (linesSeen === 3) {
-          setTimeout(() => { r.watchStop(filePath); }, 500);
+          r.watchStop(filePath);
           done();
         }
       })
@@ -99,7 +99,7 @@ describe('reader', function () {
       .on('read', function (data) {
         // console.log(data);
         assert.equal(data, logLine);
-        setTimeout(() => { r.watchStop(dataDir); }, 500);
+        r.watchStop(dataDir);
         done();
       })
   })
@@ -125,8 +125,8 @@ describe('reader', function () {
       })
       .on('read', (data) => { assert.equal(data, logLine); })
       .on('drain', (cb)  => {
+        r.watchStop(filePath);
         cb(); done();
-        setTimeout(() => { r.watchStop(filePath); }, 500);
       })
   })
 
@@ -156,7 +156,7 @@ describe('reader', function () {
         if (calledDone) return;
         calledDone = true;
         assert.equal(appendsRead, 1);
-        setTimeout(() => { r.watchStop(appendFile); }, 500);
+        r.watchStop(appendFile);
         done();
       }
 
@@ -223,7 +223,7 @@ describe('reader', function () {
 
       function tryDone () {
         if (appendDone) {
-          setTimeout(() => { r.watchStop(rotateLog); }, 500);
+          r.watchStop(rotateLog);
           return done();
         }
         setTimeout(() => { tryDone(); }, 10);
@@ -328,7 +328,7 @@ describe('reader', function () {
       let appendDone = false;
       function tryDone () {
         if (appendDone) {
-          setTimeout(() => { r.watchStop(missingFile); }, 500);
+          r.watchStop(missingFile);
           return done();
         }
         setTimeout(() => { tryDone(); }, 10);
@@ -365,9 +365,12 @@ describe('reader', function () {
       })
 
       let appendDone = false;
+      let testDone = false;
       function tryDone () {
+        if (testDone) return;
         if (appendDone) {
-          setTimeout(() => { r.watchStop(missingFile); }, 500);
+          testDone = true;
+          r.watchStop(missingFile);
           return done();
         }
         setTimeout(() => { tryDone(); }, 10);
@@ -382,7 +385,7 @@ describe('reader', function () {
           console.error('error: ' + err);
         })
         .on('end', () => {
-          setTimeout(() => { r.watchStop(missingFile); }, 500);
+          r.watchStop(missingFile);
         })
 
       process.nextTick(() => {
@@ -484,6 +487,7 @@ describe('reader', function () {
         data.push('Line number ' + i);
       }
       const filePath = path.join(dataDir, 'bytes.log');
+      let testDone = false;
       fs.writeFile(filePath, data.join('\n'), (err) => {
         if (err) return done(err);
         fs.stat(filePath, (err, stat) => {
@@ -503,10 +507,10 @@ describe('reader', function () {
                   cb();
                 })
                 .on('end', () => {
-                  // console.log('end');
-                  // console.log(reader.watcher);
+                  if (testDone) return;
+                  testDone = true;
                   assert.equal(readLines, 10);
-                  setTimeout(() => { r.watchStop(filePath); }, 1000);
+                  r.watchStop(filePath);
                   done();
                 })
               // required otherwise bytes wont be used
@@ -579,9 +583,12 @@ describe('reader', function () {
       let appendDone = false;
       let readLines = 0;
       let r;
+      let testDone = false;
 
       function tryDone () {
+        if (testDone) return;
         if (appendDone) {
+          testDone = true;
           setTimeout(() => { r.watchStop(emptyLog); }, 500);
           return done();
         }
