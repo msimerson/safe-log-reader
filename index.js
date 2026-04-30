@@ -91,17 +91,27 @@ class Reader extends events.EventEmitter {
   readLine () {
     this.canUseBookmarkBytes = false;
 
-    if (this.alreadyRead()) return;
-    if (this.batchIsFull()) return;
+    if (this.alreadyRead()) {
+      // A line was skipped, continue loop
+      return 'skipping';
+    }
+    if (this.batchIsFull()) {
+      // Batch is full, stop loop
+      return false;
+    }
 
     const line = this.liner.read();
     // console.log(`\treadLine from ${path.basename(this.filePath)}: ${line}`)
-    if (line === null) return;         // EOF
+    if (line === null) {
+      // EOF, stop loop
+      return false;
+    }
 
     this.batch.count++;
     this.lines.position++;
     if (line) this.bytesOffset += (line.length + EOL.length);
     this.emit('read', line, this.lines.position);
+    return true; // Line was read, continue loop
   }
 
   alreadyRead () {
@@ -253,7 +263,12 @@ class Reader extends events.EventEmitter {
       .on('readable', () => {
         if (process.env.WANTS_SHUTDOWN) return; // cease reading
         this.emit('testSetup')
-        this.readLine();
+        // In Node 22+, readable events may fire with buffered data multiple times
+        // Loop to consume all available data until EOF or batch limit
+        while (this.readLine()) {
+          // readLine returns truthy (true or 'skipping') to continue
+          // readLine returns false (falsy) to stop
+        }
       })
       .on('end', () => {
         this.endStream();

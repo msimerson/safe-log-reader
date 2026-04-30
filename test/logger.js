@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 
+const { describe, it } = require('node:test');
 const logger = require('../lib/logger');
 
 describe('logger', function () {
